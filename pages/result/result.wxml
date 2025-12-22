@@ -1,0 +1,93 @@
+<view class="result-page">
+  
+  <!-- 阶段一：老虎机 (Loading) -->
+  <view class="slot-machine-container" wx:if="{{isLoading}}">
+    <view class="slot-machine-header">
+      <view class="bulb-row">
+        <view class="bulb" wx:for="{{[1,2,3,4,5]}}" wx:key="*this"></view>
+      </view>
+    </view>
+    <view class="slot-window">
+      <view class="slot-col col-1">
+        <view class="slot-items-wrapper {{spinning ? 'spin-anim-1' : ''}}">
+           <text>🎡</text><text>🎬</text><text>🍷</text><text>🎸</text>
+        </view>
+      </view>
+      <view class="slot-col col-2">
+         <view class="slot-items-wrapper {{spinning ? 'spin-anim-2' : ''}}">
+           <text>🍝</text><text>🍜</text><text>🍰</text><text>🍱</text>
+         </view>
+      </view>
+      <view class="slot-col col-3">
+         <view class="slot-items-wrapper {{spinning ? 'spin-anim-3' : ''}}">
+           <text>❤️</text><text>✨</text><text>🌙</text><text>🎵</text>
+         </view>
+      </view>
+    </view>
+    <view class="slot-text">AI 正在疯狂计算浪漫指数...</view>
+  </view>
+
+  <!-- 阶段二：小票展示 (Result) -->
+  <view class="receipt-container {{showReceipt ? 'slide-up' : ''}}" wx:else>
+    <view class="receipt">
+      <!-- 锯齿顶部 -->
+      <view class="jagged-top"></view>
+      
+      <view class="receipt-content">
+        <view class="receipt-header">
+          <text class="brand">CP 灵感舱</text>
+          <text class="date">{{resultData.date || 'Today'}}</text>
+        </view>
+        
+        <view class="divider dashed"></view>
+        
+        <view class="main-suggestion">
+          <text class="suggestion-title">{{result.title}}</text>
+          <view class="star-rating">
+            <text>匹配度：</text>
+            <text style="color:#FF6B6B">❤❤❤❤❤</text>
+          </view>
+        </view>
+
+        <view class="details-box">
+          <view class="detail-row">
+            <text class="label">📍 地点</text>
+            <text class="value">{{result.location}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="label">🎮 玩法</text>
+            <text class="value highlight">{{result.activity}}</text>
+          </view>
+        </view>
+        
+        <view class="reason-box">
+          <text class="reason-label">💡 推荐理由</text>
+          <text class="reason-text">{{result.reason}}</text>
+        </view>
+
+        <view class="tags-row">
+          <block wx:for="{{result.tags}}" wx:key="*this">
+             <text class="tag">{{item}}</text>
+          </block>
+        </view>
+
+        <view class="divider dashed"></view>
+        
+        <view class="barcode">|| ||| | |||| || ||</view>
+        <text class="footer-msg">祝你们玩得开心！</text>
+      </view>
+
+      <!-- 锯齿底部 -->
+      <view class="jagged-bottom"></view>
+    </view>
+
+    <!-- 摇杆/按钮 -->
+    <view class="action-area">
+      <button class="reroll-btn" bindtap="reRoll">
+        <text>不满意？拉动拉杆重试 🕹️</text>
+      </button>
+      <button class="share-btn" open-type="share">分享给Ta ❤️</button>
+    </view>
+  </view>
+
+</view>

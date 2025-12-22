@@ -1,0 +1,22 @@
+/* 定义全局可爱配色 */
+page {
+  --cream-yellow: #FFF8E7; /* 奶油黄背景 */
+  --peach-pink: #FFB7B2;   /* 蜜桃粉 */
+  --mint-green: #B5EAD7;   /* 薄荷绿 */
+  --sky-blue: #C7CEEA;     /* 天空蓝 */
+  --text-dark: #4A4A4A;    /* 深灰文字 */
+  --primary-btn: #FF9AA2;  /* 主按钮红 */
+  
+  font-family: "PingFang SC", "Heiti SC", sans-serif;
+  background-color: var(--cream-yellow);
+  color: var(--text-dark);
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}

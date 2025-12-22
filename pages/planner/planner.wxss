@@ -1,0 +1,128 @@
+.config-page {
+  height: 100vh;
+  transition: background 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 时间背景联动 */
+.bg-morning { background: linear-gradient(to bottom, #E0F7FA, #FFF); }
+.bg-am { background: linear-gradient(to bottom, #FFF9C4, #FFF); }
+.bg-pm { background: linear-gradient(to bottom, #FFCCBC, #FFF); }
+.bg-night { background: linear-gradient(to bottom, #3949AB, #5C6BC0); color: #fff !important; }
+/* 夜晚模式下文字反白适配需额外处理，这里简化处理 */
+
+.scroll-container {
+  height: 100vh;
+  padding: 30rpx;
+}
+
+.section {
+  margin-bottom: 60rpx;
+  background: rgba(255,255,255,0.6);
+  border-radius: 30rpx;
+  padding: 30rpx;
+  backdrop-filter: blur(10px);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 30rpx;
+}
+
+/* 气泡样式 */
+.bubble-container {
+  display: flex;
+  flex-direction: column-reverse; /* 从下往上排列 */
+  align-items: center;
+  gap: 20rpx;
+}
+
+.bubble-item {
+  background: #fff;
+  border: 4rpx solid var(--peach-pink);
+  color: var(--text-dark);
+  padding: 15rpx 40rpx;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+
+.bubble-item.active {
+  background: var(--peach-pink);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 10rpx 20rpx rgba(255, 183, 178, 0.5);
+}
+
+/* 呼吸动画 */
+@keyframes breathe {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* 时间选择 */
+.time-selector {
+  display: flex;
+  justify-content: space-between;
+}
+.time-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  opacity: 0.6;
+}
+.time-opt.active {
+  background: #fff;
+  opacity: 1;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
+}
+.time-icon { font-size: 48rpx; margin-bottom: 10rpx; }
+
+/* 预算金币堆 */
+.budget-section { position: relative; }
+.money-display { font-size: 48rpx; font-weight: bold; text-align: center; color: #FFD700; }
+.money-pile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20rpx;
+}
+.coin-pile {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap-reverse; /* 从底部堆积 */
+  justify-content: center;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  transition: height 0.2s ease;
+  opacity: 0.8;
+}
+.budget-slider { width: 100%; margin-top: 20rpx; }
+
+/* 底部按钮 */
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 40rpx;
+  background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+.start-btn {
+  background: #FF6B6B;
+  color: white;
+  border-radius: 60rpx;
+  height: 100rpx;
+  line-height: 100rpx;
+  font-size: 36rpx;
+  box-shadow: 0 10rpx 20rpx rgba(255, 107, 107, 0.4);
+  border: none;
+}
+.start-btn:active { transform: translateY(5rpx); box-shadow: none; }

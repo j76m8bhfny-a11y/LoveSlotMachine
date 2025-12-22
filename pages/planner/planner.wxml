@@ -1,0 +1,89 @@
+<view class="config-page {{timeBgClass}}">
+  <scroll-view scroll-y class="scroll-container">
+    
+    <!-- 1. 关系气泡 -->
+    <view class="section bubble-section">
+      <view class="section-title">你们现在是？</view>
+      <view class="bubble-container">
+        <block wx:for="{{relations}}" wx:key="index">
+          <view 
+            class="bubble-item {{selectedRelation === index ? 'active' : ''}}" 
+            style="animation-delay: {{index * 0.2}}s"
+            bindtap="selectRelation" 
+            data-index="{{index}}"
+          >
+            <text class="bubble-text">{{item}}</text>
+            <view class="bubble-pop" wx:if="{{selectedRelation === index}}"></view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 2. 时间选择 -->
+    <view class="section time-section">
+      <view class="section-title">什么时候去？</view>
+      <view class="time-selector">
+        <block wx:for="{{times}}" wx:key="index">
+          <view class="time-opt {{selectedTime === index ? 'active' : ''}}" bindtap="selectTime" data-index="{{index}}">
+            <text class="time-icon">{{item.icon}}</text>
+            <text class="time-name">{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 3. 预算金币堆 -->
+    <view class="section budget-section">
+      <view class="section-title">预算多少米？</view>
+      <view class="money-display">
+        <text class="currency">¥</text>
+        <text class="amount">{{budget}}</text>
+      </view>
+      
+      <view class="money-pile-container">
+        <!-- 简单的 CSS 堆积效果，用金币 Emoji 重复展示 -->
+        <view class="coin-pile" style="height: {{budget / 5000 * 200 + 20}}rpx">
+           <text style="word-break: break-all;">{{coinString}}</text>
+        </view>
+        
+        <slider 
+          class="budget-slider" 
+          min="0" 
+          max="5000" 
+          step="100" 
+          value="{{budget}}" 
+          activeColor="#FFD700" 
+          backgroundColor="#EEE" 
+          block-size="24"
+          bindchanging="onBudgetChange"
+          bindchange="onBudgetChange"
+        />
+      </view>
+    </view>
+
+    <!-- 4. 时空选择 -->
+    <view class="section space-section">
+      <view class="section-title">时空坐标</view>
+      <view class="space-row">
+        <picker mode="date" value="{{date}}" start="2025-01-01" bindchange="bindDateChange">
+          <view class="picker-box">
+            📅 {{date}}
+          </view>
+        </picker>
+        <view class="picker-box location-box" bindtap="chooseLocation">
+          📍 {{locationName}}
+        </view>
+      </view>
+    </view>
+    
+    <view style="height: 150rpx;"></view> <!-- 底部占位 -->
+
+  </scroll-view>
+
+  <!-- 底部大按钮 -->
+  <view class="footer">
+    <button class="start-btn" bindtap="submitConfig">
+      <text>投入硬币，开始！🪙</text>
+    </button>
+  </view>
+</view>
