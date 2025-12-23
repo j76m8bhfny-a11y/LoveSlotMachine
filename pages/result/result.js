@@ -1,39 +1,107 @@
 const api = require('../../utils/api.js');
 
+// 预设图案池
+const ICONS = ['🍎', '🍋', '🍉', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝', '💎'];
+
 Page({
   data: {
     isLoading: true,
-    spinning: true,
+    spinning: false,
     showReceipt: false,
     inputData: {},
     result: null,
     retryCount: 0,
+    
+    // 分析气泡相关
     analysisLogs: [],
-    scrollTop: 0
+    scrollTop: 0,
+    
+    // 滚轮数据
+    reel1: [],
+    reel2: [],
+    reel3: [],
+
+    // ✨ 像素拉杆动画状态
+    leverFrame: 0, // 当前帧 (0-3)
+    isPulling: false // 是否正在拉动中
   },
 
   onLoad(options) {
+    // 初始化随机滚轮
+    this.setData({
+      reel1: this.generateReel(),
+      reel2: this.generateReel(),
+      reel3: this.generateReel(),
+    });
+
     if (options.data) {
       const inputData = JSON.parse(decodeURIComponent(options.data));
       this.setData({ inputData });
-      this.startProcess(inputData);
+      
+      // 页面加载 0.5s 后自动拉杆
+      setTimeout(() => {
+        this.pullLever(inputData);
+      }, 500);
     }
   },
 
-  startProcess(data) {
+  generateReel() {
+    return Array.from({ length: 20 }, () => ICONS[Math.floor(Math.random() * ICONS.length)]);
+  },
+
+  // ✨✨ 核心：像素拉杆序列帧动画 ✨✨
+  pullLever(data) {
+    // 如果已经在拉动中，防止重复触发
+    if (this.data.isPulling) return;
+    
+    this.setData({ isPulling: true });
+
+    // 动画序列：0 -> 1 -> 2 (触底) -> 3 (回弹) -> 0
+    
+    // Step 1: 蓄力 (Frame 1)
+    this.setData({ leverFrame: 1 });
+
+    // Step 2: 触底 (Frame 2) - 100ms后
+    setTimeout(() => {
+      this.setData({ leverFrame: 2 });
+      wx.vibrateShort({ type: 'heavy' }); // 触底震动，更有手感
+      
+      // 触底瞬间，触发老虎机逻辑
+      this.startSlotProcess(data || this.data.inputData); 
+    }, 100);
+
+    // Step 3: 回弹 (Frame 3) - 300ms后
+    setTimeout(() => {
+      this.setData({ leverFrame: 3 });
+    }, 300);
+
+    // Step 4: 归位 (Frame 0) - 500ms后
+    setTimeout(() => {
+      this.setData({ 
+        leverFrame: 0, 
+        isPulling: false 
+      });
+    }, 500);
+  },
+
+  // 老虎机业务逻辑 (转动 -> API -> 停止)
+  startSlotProcess(data) {
     this.setData({ 
-      isLoading: true, 
-      spinning: true,
+      spinning: true, // CSS 无限滚动开始
+      isLoading: true,
+      showReceipt: false,
       analysisLogs: [] 
     });
     
     this.startAnalysisSimulation(data);
+    this.callAiApi(data);
+  },
 
+  callAiApi(data) {
     const requestData = { ...data, retryCount: this.data.retryCount };
     
     api.getDatingAdvice(requestData)
       .then(res => {
-        // 保证动画至少播完
         setTimeout(() => {
           this.handleSuccess(res);
         }, 3500); 
@@ -42,6 +110,7 @@ Page({
         console.error(err);
         wx.showToast({ title: 'AI 脑路堵塞，重试一下', icon: 'none' });
         this.setData({ spinning: false });
+        clearInterval(this.logTimer);
       });
   },
 
@@ -82,43 +151,54 @@ Page({
     logs.push({ type: 'final', text: '灵感合成完毕！马上揭晓～' });
 
     let index = 0;
+    if (this.logTimer) clearInterval(this.logTimer);
     this.logTimer = setInterval(() => {
       if (index < logs.length) {
         const newLog = logs[index];
         const currentLogs = this.data.analysisLogs;
         currentLogs.push(newLog);
-        
-        this.setData({ 
-          analysisLogs: currentLogs,
-          scrollTop: currentLogs.length * 100 
-        });
+        this.setData({ analysisLogs: currentLogs, scrollTop: currentLogs.length * 100 });
         wx.vibrateShort({ type: 'light' });
         index++;
       } else {
         clearInterval(this.logTimer);
       }
-    }, 1500);
+    }, 1500); // 1.5秒一条
   },
 
   handleSuccess(res) {
     clearInterval(this.logTimer);
-    this.setData({ 
-      result: res,
-      spinning: false 
+    const winIcon = '❤️';
+    const winningReel = [ICONS[0], winIcon, ...ICONS]; 
+
+    this.setData({
+      reel1: winningReel,
+      reel2: winningReel,
+      reel3: winningReel,
     });
+
+    this.setData({ spinning: false });
     
+    // 模拟依次停下的震动
+    setTimeout(() => wx.vibrateShort(), 100);
+    setTimeout(() => wx.vibrateShort(), 600);
+    setTimeout(() => wx.vibrateShort(), 1100);
+
     setTimeout(() => {
-      this.setData({ isLoading: false, showReceipt: true });
+      this.setData({ 
+        result: res,
+        isLoading: false, 
+        showReceipt: true 
+      });
       wx.vibrateLong(); 
-    }, 500);
+    }, 2500); 
   },
 
+  // 重试逻辑：也调用 pullLever 来触发动画
   reRoll() {
-    this.setData({ 
-      showReceipt: false,
-      retryCount: this.data.retryCount + 1 
-    });
-    this.startProcess(this.data.inputData);
+    this.setData({ retryCount: this.data.retryCount + 1 });
+    // 手动触发拉杆动画 + 重新请求
+    this.pullLever();
   },
 
   onUnload() {

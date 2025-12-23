@@ -1,6 +1,6 @@
 .result-page {
   min-height: 100vh;
-  background: #2C3E50; /* 深色背景衬托发光 */
+  background: #2C3E50;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,13 +9,7 @@
   overflow: hidden;
 }
 
-/* --- 老虎机 --- */
-.slot-machine-wrapper {
-  width: 100%; max-width: 600rpx;
-  animation: bounceIn 0.5s;
-}
-
-/* 容器：包裹老虎机和分析卡片 */
+/* 容器 */
 .loading-wrapper {
   width: 100%;
   max-width: 650rpx;
@@ -23,179 +17,179 @@
   flex-direction: column;
   gap: 40rpx;
   align-items: center;
+  animation: bounceIn 0.5s;
 }
 
-.machine-roof {
-  background: #D32F2F; height: 60rpx;
-  border-radius: 30rpx 30rpx 0 0;
-  border: 6rpx solid #000; border-bottom: none;
-  display: flex; justify-content: space-around; align-items: center;
-}
-.light { width: 20rpx; height: 20rpx; background: #FFEB3B; border-radius: 50%; animation: blink 0.5s infinite alternate; }
-
-.machine-body {
-  background: #FF5252;
-  border: 6rpx solid #000;
-  border-radius: 0 0 30rpx 30rpx;
-  padding: 40rpx;
-  box-shadow: 10rpx 10rpx 0 rgba(0,0,0,0.5);
+@keyframes bounceIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.screen-frame {
-  background: #333; padding: 20rpx; border-radius: 20rpx;
-  box-shadow: inset 0 0 20rpx #000;
+/* --- 老虎机容器 --- */
+.slot-machine-wrapper {
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  perspective: 1000px;
+  margin-bottom: 20rpx;
+}
+
+/* 机身图片容器 (放大版) */
+.machine-body-image-wrapper {
+  position: relative;
+  width: 650rpx; /* 放大到 650rpx */
+  z-index: 10;
+}
+
+.machine-bg-img {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 15rpx 25rpx rgba(0,0,0,0.4));
+}
+
+/* ✨✨ 像素拉杆样式 ✨✨ */
+.pixel-lever-container {
+  position: absolute;
+  top: 140rpx; /* ⚠️ 根据机身图片调整位置 */
+  right: 0rpx; /* 放在机身右侧 */
+  width: 100rpx; /* 根据图片宽度调整 */
+  height: 200rpx;
+  z-index: 5;
+}
+
+.pixel-lever-img { 
+  width: 100%; 
+  display: block; 
+  /* 像素风关键: 保持清晰锯齿 */
+  image-rendering: pixelated; 
+}
+
+
+/* ✨✨ 屏幕定位适配 (已针对 650rpx 宽度微调) ✨✨ */
+.screen-frame-overlay {
+  position: absolute;
+  top: 38%;        
+  left: 18%;       
+  width: 64%;      
+  height: 28%;     
+  background: #222;
+  border-radius: 12rpx; 
+  overflow: hidden;
+  box-shadow: inset 0 0 15rpx #000;
+  padding: 6rpx; 
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 
 .reel-container {
-  display: flex; gap: 10rpx; height: 180rpx; overflow: hidden;
-  position: relative; background: #fff; border-radius: 10rpx;
+  display: flex; gap: 6rpx; width: 100%; height: 100%;
+  overflow: hidden; position: relative; background: #fffdf0; border-radius: 8rpx;
 }
 
-.reel { flex: 1; overflow: hidden; position: relative; }
-.reel-inner { display: flex; flex-direction: column; font-size: 80rpx; line-height: 180rpx; text-align: center; }
-
-/* 动态模糊滚动 */
-.blur-spin {
-  animation: scrollAnim linear infinite;
-  filter: blur(4px); /* 速度感模糊 */
+.reel {
+  flex: 1; overflow: hidden; position: relative;
+  border-right: 1rpx solid rgba(0,0,0,0.1);
 }
-@keyframes scrollAnim {
+.reel:last-child { border: none; }
+
+.reel-inner {
+  display: flex; flex-direction: column;
+  transform: translateY(0);
+}
+
+/* 字体放大适配 */
+.reel-item {
+  height: 160rpx; /* 估算值，根据容器高度撑满 */
+  display: flex; align-items: center; justify-content: center;
+  font-size: 80rpx; 
+}
+
+/* 🌀 滚动动画 */
+@keyframes slotSpin {
   0% { transform: translateY(0); }
-  100% { transform: translateY(-75%); } /* 滚动距离 */
+  100% { transform: translateY(-1600rpx); } /* 假设10个，每个160rpx */
+}
+.spinning {
+  animation-name: slotSpin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.spinning .reel-item { filter: blur(2px); }
+
+/* 🛑 停止 */
+.stopped {
+  animation: none;
+  transform: translateY(-160rpx); 
+  transition: transform 2s cubic-bezier(0.1, 1, 0.3, 1);
 }
 
+/* 装饰 */
 .glass-glare {
   position: absolute; top: 0; left: 0; width: 100%; height: 50%;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0));
-  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0)); pointer-events: none;
+}
+.win-line {
+  position: absolute; top: 50%; left: 0; width: 100%; height: 2rpx;
+  background: rgba(255,0,0,0.2); transform: translateY(-50%); pointer-events: none;
 }
 
-.machine-label { text-align: center; color: #7f0000; font-weight: 900; margin-top: 20rpx; font-size: 36rpx; letter-spacing: 4rpx; }
-.loading-text { color: #fff; margin-top: 40rpx; font-family: monospace; animation: pulse 1s infinite; }
-
-/* ✨✨ 新增：多巴胺风格分析卡片 ✨✨ */
+/* --- 分析卡片 (多巴胺风格) --- */
 .analysis-card {
-  width: 100%;
-  background: #FFF8E7; /* 奶油黄 */
-  border-radius: 30rpx;
-  border: 6rpx solid #333;
-  overflow: hidden;
-  box-shadow: 10rpx 10rpx 0 rgba(0,0,0,0.2);
-  position: relative;
+  width: 100%; background: #FFF8E7; border-radius: 30rpx; border: 6rpx solid #333;
+  overflow: hidden; box-shadow: 10rpx 10rpx 0 rgba(0,0,0,0.2);
 }
-
-/* 顶部装饰条 */
 .card-header {
-  background: #FFB7B2; /* 蜜桃粉 */
-  padding: 16rpx 30rpx;
-  display: flex;
-  align-items: center;
-  border-bottom: 4rpx solid #333;
+  background: #FFB7B2; padding: 16rpx 30rpx; display: flex; align-items: center; border-bottom: 4rpx solid #333;
 }
-
 .emoji-icon { font-size: 32rpx; margin-right: 16rpx; animation: bounce 2s infinite; }
-.header-title {
-  color: #333;
-  font-size: 28rpx;
-  font-weight: 900;
-  letter-spacing: 2rpx;
-}
-
-.card-body {
-  height: 260rpx;
-  padding: 24rpx;
-  box-sizing: border-box;
-}
+.header-title { color: #333; font-size: 28rpx; font-weight: 900; letter-spacing: 2rpx; }
+.card-body { height: 260rpx; padding: 24rpx; box-sizing: border-box; }
 
 .log-bubble {
-  background: #fff;
-  color: #555;
-  font-size: 26rpx;
-  font-weight: bold;
-  padding: 12rpx 24rpx;
-  border-radius: 20rpx;
-  border: 3rpx solid #eee;
-  margin-bottom: 16rpx;
-  width: fit-content;
-  max-width: 90%;
-  
-  /* Q弹出现动画 */
-  opacity: 0;
-  transform: scale(0.8) translateY(20rpx);
+  background: #fff; color: #555; font-size: 26rpx; font-weight: bold;
+  padding: 12rpx 24rpx; border-radius: 20rpx; border: 3rpx solid #eee;
+  margin-bottom: 16rpx; width: fit-content; max-width: 90%;
+  display: flex; align-items: center; gap: 10rpx;
+  opacity: 0; transform: scale(0.8) translateY(20rpx);
   animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
 }
-
-/* 重点高亮 */
-.highlight-text { color: #FF6B6B; }
-
-@keyframes popIn {
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6rpx); }
-}
+@keyframes popIn { to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6rpx); } }
 
 /* --- 小票 --- */
 .receipt-scene { width: 100%; display: flex; flex-direction: column; align-items: center; opacity: 0; transform: translateY(100rpx); }
 .receipt-scene.enter { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
 @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
-.receipt-paper {
-  background: #fff; width: 95%; position: relative;
-  filter: drop-shadow(0 20rpx 30rpx rgba(0,0,0,0.3));
-  margin-bottom: 50rpx;
-}
-
-/* 锯齿生成器 */
-.sawtooth-top {
-  height: 16rpx; width: 100%; position: absolute; top: -16rpx;
-  background-image: radial-gradient(circle, transparent 70%, #fff 75%);
-  background-size: 32rpx 32rpx; background-position: -16rpx 16rpx;
-}
-.sawtooth-bottom {
-  height: 16rpx; width: 100%; position: absolute; bottom: -16rpx;
-  background-image: radial-gradient(circle, #fff 70%, transparent 75%);
-  background-size: 32rpx 32rpx; background-position: -16rpx -16rpx;
-}
+.receipt-paper { background: #fff; width: 95%; position: relative; filter: drop-shadow(0 20rpx 30rpx rgba(0,0,0,0.3)); margin-bottom: 50rpx; }
+.sawtooth-top { height: 16rpx; width: 100%; position: absolute; top: -16rpx; background-image: radial-gradient(circle, transparent 70%, #fff 75%); background-size: 32rpx 32rpx; background-position: -16rpx 16rpx; }
+.sawtooth-bottom { height: 16rpx; width: 100%; position: absolute; bottom: -16rpx; background-image: radial-gradient(circle, #fff 70%, transparent 75%); background-size: 32rpx 32rpx; background-position: -16rpx -16rpx; }
 
 .receipt-body { padding: 40rpx; color: #333; font-family: 'Courier New', monospace; }
 .r-header { text-align: center; margin-bottom: 20rpx; }
 .r-title { font-size: 40rpx; font-weight: 900; display: block; }
 .r-date { font-size: 24rpx; color: #888; }
 .r-divider { text-align: center; color: #ddd; overflow: hidden; white-space: nowrap; margin: 20rpx 0; letter-spacing: 6rpx; }
-
 .r-main { text-align: center; margin: 40rpx 0; }
 .plan-name { font-size: 44rpx; font-weight: bold; line-height: 1.3; margin-bottom: 10rpx; display: block; }
 .stars { color: #FF6B6B; letter-spacing: 10rpx; }
-
 .r-kv { font-size: 28rpx; }
 .kv-row { display: flex; margin-bottom: 16rpx; }
 .k { width: 120rpx; color: #999; font-weight: bold; }
 .v { flex: 1; font-weight: bold; }
 .highlight { color: #E91E63; background: #FCE4EC; padding: 4rpx 10rpx; border-radius: 8rpx; }
-
 .r-box { background: #FFF3E0; padding: 20rpx; border-radius: 12rpx; border: 2rpx dashed #FFB74D; margin-top: 30rpx; }
 .box-label { font-size: 24rpx; color: #F57C00; display: block; margin-bottom: 8rpx; font-weight: bold; }
 .box-content { font-size: 26rpx; line-height: 1.5; color: #5D4037; }
-
 .r-tags { margin-top: 30rpx; display: flex; flex-wrap: wrap; gap: 10rpx; }
 .r-tag { font-size: 22rpx; border: 2rpx solid #333; padding: 4rpx 16rpx; border-radius: 30rpx; }
-
 .r-footer { text-align: center; margin-top: 20rpx; opacity: 0.6; }
 .barcode { font-family: sans-serif; font-size: 32rpx; letter-spacing: 4rpx; transform: scaleY(1.5); display: block; margin-bottom: 10rpx; }
 
 .action-dock { width: 100%; display: flex; gap: 20rpx; }
-.handle-btn {
-  flex: 1; border-radius: 50rpx; font-size: 28rpx; font-weight: bold;
-  height: 90rpx; line-height: 90rpx;
-  border: 4rpx solid #333; box-shadow: 6rpx 6rpx 0 rgba(0,0,0,0.2);
-}
+.handle-btn { flex: 1; border-radius: 50rpx; font-size: 28rpx; font-weight: bold; height: 90rpx; line-height: 90rpx; border: 4rpx solid #333; box-shadow: 6rpx 6rpx 0 rgba(0,0,0,0.2); }
 .reroll { background: #fff; color: #333; }
 .share { background: #FF6B6B; color: #fff; }
+.hover-btn { transform: translate(4rpx, 4rpx) !important; box-shadow: 2rpx 2rpx 0rpx rgba(0,0,0,0.15) !important; }

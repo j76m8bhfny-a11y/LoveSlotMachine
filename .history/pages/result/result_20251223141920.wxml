@@ -1,0 +1,127 @@
+<view class="result-page">
+  
+  <view class="loading-wrapper" wx:if="{{isLoading}}">
+    
+    <view class="slot-machine-wrapper">
+      
+      <!-- ✨✨ 图片序列帧拉杆 ✨✨ -->
+      <view class="pixel-lever-container" bindtap="reRoll">
+        <!-- 预加载所有帧 (隐藏)，防止第一次播放闪烁 -->
+        <view style="width:0;height:0;overflow:hidden;position:absolute;">
+          <!-- ⚠️ 记得把你的图片放到 /assets/images/ 下，并命名为 lever_0.png 等 -->
+          <image src="/assets/images/lever_0.png"></image>
+          <image src="/assets/images/lever_1.png"></image>
+          <image src="/assets/images/lever_2.png"></image>
+          <image src="/assets/images/lever_3.png"></image>
+        </view>
+        
+        <!-- 实际显示的动态帧 -->
+        <image class="pixel-lever-img" src="/assets/images/lever_{{leverFrame}}.png" mode="widthFix"></image>
+      </view>
+
+      <!-- 机身 (图片背景 + 代码滚轮) -->
+      <view class="machine-body-image-wrapper">
+        <!-- ⚠️ 替换点：这里放你的老虎机背景图 -->
+        <image class="machine-bg-img" src="/assets/images/lever_0.png" mode="widthFix"></image>
+        
+        <!-- 屏幕区域 (定位在像素机身的屏幕上) -->
+        <view class="screen-frame-overlay">
+          <view class="reel-container">
+            <!-- 滚轮1 -->
+            <view class="reel">
+              <view class="reel-inner {{spinning ? 'spinning' : 'stopped'}}" style="animation-duration: 0.6s">
+                <block wx:for="{{reel1}}" wx:key="index">
+                  <view class="reel-item">{{item}}</view>
+                </block>
+              </view>
+            </view>
+            <!-- 滚轮2 -->
+            <view class="reel">
+              <view class="reel-inner {{spinning ? 'spinning' : 'stopped'}}" style="animation-duration: 0.9s">
+                <block wx:for="{{reel2}}" wx:key="index">
+                  <view class="reel-item">{{item}}</view>
+                </block>
+              </view>
+            </view>
+            <!-- 滚轮3 -->
+            <view class="reel">
+              <view class="reel-inner {{spinning ? 'spinning' : 'stopped'}}" style="animation-duration: 0.75s">
+                <block wx:for="{{reel3}}" wx:key="index">
+                  <view class="reel-item">{{item}}</view>
+                </block>
+              </view>
+            </view>
+            
+            <view class="glass-glare"></view>
+            <view class="win-line"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分析气泡 (多巴胺风格) -->
+    <view class="analysis-card">
+      <view class="card-header">
+        <text class="emoji-icon">🤖</text>
+        <text class="header-title">灵感分析中...</text>
+      </view>
+      <scroll-view scroll-y class="card-body" scroll-top="{{scrollTop}}" scroll-with-animation>
+        <block wx:for="{{analysisLogs}}" wx:key="index">
+          <view class="log-bubble">
+            <text wx:if="{{item.type==='relation'}}">💞</text>
+            <text wx:elif="{{item.type==='weather'}}">🌦️</text>
+            <text wx:elif="{{item.type==='budget'}}">💰</text>
+            <text wx:else>✨</text>
+            <text>{{item.text}}</text>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+
+  </view>
+
+  <!-- 小票部分 -->
+  <view class="receipt-scene {{showReceipt ? 'enter' : ''}}" wx:else>
+    
+    <view class="receipt-paper">
+      <view class="sawtooth-top"></view>
+      <view class="receipt-body">
+        <view class="r-header">
+          <text class="r-title">心动小票</text>
+          <text class="r-date">{{result.date || 'Today'}}</text>
+        </view>
+        <view class="r-divider">--------------------------------</view>
+        <view class="r-main">
+          <text class="plan-name">{{result.title}}</text>
+          <view class="stars">❤❤❤❤❤</view>
+        </view>
+        <view class="r-kv">
+          <view class="kv-row"><text class="k">📍 地点</text><text class="v">{{result.location}}</text></view>
+          <view class="kv-row activity-row"><text class="k">🎡 玩法</text><text class="v highlight">{{result.activity}}</text></view>
+        </view>
+        <view class="r-box">
+          <text class="box-label">💡 推荐理由</text>
+          <text class="box-content">{{result.reason}}</text>
+        </view>
+        <view class="r-tags">
+          <block wx:for="{{result.tags}}" wx:key="*this"><text class="r-tag">#{{item}}</text></block>
+        </view>
+        <view class="r-divider">--------------------------------</view>
+        <view class="r-footer">
+          <text class="barcode">|| | ||| || || | |||</text>
+          <text>Keep Loving</text>
+        </view>
+      </view>
+      <view class="sawtooth-bottom"></view>
+    </view>
+
+    <view class="action-dock">
+      <button class="handle-btn reroll" bindtap="reRoll" hover-class="hover-btn">
+        <text>🕹️ 不满意？再拉一次</text>
+      </button>
+      <button class="handle-btn share" open-type="share" hover-class="hover-btn">
+        <text>📤 分享给Ta</text>
+      </button>
+    </view>
+  </view>
+</view>
