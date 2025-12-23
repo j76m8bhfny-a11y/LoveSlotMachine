@@ -97,7 +97,7 @@ Page({
       } else {
         clearInterval(this.logTimer);
       }
-    }, 1500);
+    }, 800);
   },
 
   handleSuccess(res) {
