@@ -3,7 +3,7 @@ const app = getApp();
 const audioCtx = wx.createInnerAudioContext();
 
 // ⚠️ 填入你的心知天气私钥 (API Key)
-const SENIVERSE_KEY = "SJJOIA7A76gQjzQjc"; 
+const SENIVERSE_KEY = ""; 
 
 Page({
   data: {

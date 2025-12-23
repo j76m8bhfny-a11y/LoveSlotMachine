@@ -6,8 +6,7 @@ Page({
     spinning: true,
     showReceipt: false,
     inputData: {},
-    result: null,
-    retryCount: 0 // ✨ 新增：记录用户的重试次数
+    result: null
   },
 
   onLoad(options) {
@@ -20,11 +19,6 @@ Page({
 
   startProcess(data) {
     this.setData({ isLoading: true, spinning: true });
-    
-    const requestData = {
-      ...data,
-      retryCount: this.data.retryCount
-    };
     
     // 1. 发起 AI 请求
     api.getDatingAdvice(data)
@@ -51,11 +45,7 @@ Page({
   },
 
   reRoll() {
-    this.setData({ 
-      showReceipt: false,
-      retryCount: this.data.retryCount + 1 // ✨ 每次不满，计数+1
-    });
-    // 传入原始数据（startProcess 内部会合并 retryCount）
+    this.setData({ showReceipt: false });
     this.startProcess(this.data.inputData);
   }
 });

@@ -51,11 +51,7 @@ Page({
   },
 
   reRoll() {
-    this.setData({ 
-      showReceipt: false,
-      retryCount: this.data.retryCount + 1 // ✨ 每次不满，计数+1
-    });
-    // 传入原始数据（startProcess 内部会合并 retryCount）
+    this.setData({ showReceipt: false });
     this.startProcess(this.data.inputData);
   }
 });
