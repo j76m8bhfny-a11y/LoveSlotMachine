@@ -59,7 +59,7 @@
   left: 27%;       
   width: 46%;      
   height: 40%;     
-  background: #222;
+  background: #f03535ff;
   border-radius: 12rpx; 
   overflow: hidden;
   box-shadow: inset 0 0 15rpx #000;

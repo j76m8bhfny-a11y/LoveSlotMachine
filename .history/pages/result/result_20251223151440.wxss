@@ -68,6 +68,10 @@
   display: flex;
   align-items: center;
 
+  /* 👇 2. 添加这行临时代码，方便调试！调整完记得删掉 */
+  border: 4rpx solid red; 
+  z-index: 100; /* 保证红框浮在最上面 */
+
 }
 
 .reel-container {

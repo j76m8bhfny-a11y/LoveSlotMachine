@@ -55,10 +55,10 @@
 /* ✨✨ 屏幕定位适配 (已针对 650rpx 宽度微调) ✨✨ */
 .screen-frame-overlay {
   position: absolute;
-  top: 41%;        
-  left: 27%;       
-  width: 46%;      
-  height: 40%;     
+  top: 38%;        
+  left: 18%;       
+  width: 64%;      
+  height: 28%;     
   background: #222;
   border-radius: 12rpx; 
   overflow: hidden;
@@ -68,6 +68,10 @@
   display: flex;
   align-items: center;
 
+  /* 👇 2. 添加这行临时代码，方便调试！调整完记得删掉 */
+  border: 4rpx solid red; 
+  z-index: 100; /* 保证红框浮在最上面 */
+  
 }
 
 .reel-container {

@@ -55,7 +55,7 @@
 /* ✨✨ 屏幕定位适配 (已针对 650rpx 宽度微调) ✨✨ */
 .screen-frame-overlay {
   position: absolute;
-  top: 41%;        
+  top: 42%;        
   left: 27%;       
   width: 46%;      
   height: 40%;     
@@ -67,6 +67,10 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
+
+  /* 👇 2. 添加这行临时代码，方便调试！调整完记得删掉 */
+  border: 4rpx solid red; 
+  z-index: 100; /* 保证红框浮在最上面 */
 
 }
 

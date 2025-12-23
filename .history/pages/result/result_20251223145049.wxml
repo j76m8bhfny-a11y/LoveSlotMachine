@@ -11,7 +11,7 @@
         <image src="/assets/images/lever_3.png"></image>
       </view>
 
-      <view class="machine-body-image-wrapper">
+      <view class="machine-body-image-wrapper" bindtap="reRoll">
         
         <image class="machine-bg-img" src="/assets/images/lever_{{leverFrame}}.png" mode="widthFix"></image>
         
