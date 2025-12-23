@@ -43,7 +43,7 @@
 
       <!-- 机身背景 -->
       <view class="machine-body-image-wrapper">
-        <image class="machine-bg-img" src="/assets/images/lever_0.png" mode="widthFix"></image>
+        <image class="machine-bg-img" src="https://cdn-icons-png.flaticon.com/512/2315/2315486.png" mode="widthFix"></image>
         
         <!-- 屏幕区域 -->
         <view class="screen-frame-overlay">
