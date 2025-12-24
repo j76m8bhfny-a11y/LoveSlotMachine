@@ -4,9 +4,10 @@
     
     <view class="slot-machine-wrapper">
       
-      <view class="machine-body-image-wrapper {{isFlowing ? 'flowing' : ''}}"> 
+      <view class="machine-body-image-wrapper {{isFlowing ? 'flowing' : ''}}" 
+            style="opacity: {{imageLoaded ? 1 : 0}}; transition: opacity 0.3s ease;">
         
-        <image class="machine-img base-img" src="/assets/images/lever_0.png" mode="scaleToFill" ></image>
+        <image class="machine-img base-img" src="/assets/images/lever_0.png" mode="scaleToFill" style="opacity: {{leverFrame === 0 ? 1 : 0}}" bindload="onImageLoad"></image>
         <image class="machine-img overlay-img" src="/assets/images/lever_1.png" mode="scaleToFill" 
                style="opacity: {{leverFrame === 1 ? 1 : 0}}"></image>     
         <image class="machine-img overlay-img" src="/assets/images/lever_2.png" mode="scaleToFill" 

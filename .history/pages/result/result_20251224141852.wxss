@@ -1,6 +1,6 @@
 .result-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #F8DEF6 0%, #FFB7B2 100%); 
+  background: #2C3E50;
   display: flex;
   flex-direction: column;
   align-items: center;

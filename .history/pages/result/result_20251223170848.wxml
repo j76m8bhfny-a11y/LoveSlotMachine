@@ -4,18 +4,19 @@
     
     <view class="slot-machine-wrapper">
       
-      <view class="machine-body-image-wrapper {{isFlowing ? 'flowing' : ''}}"> 
-        
-        <image class="machine-img base-img" src="/assets/images/lever_0.png" mode="scaleToFill" ></image>
-        <image class="machine-img overlay-img" src="/assets/images/lever_1.png" mode="scaleToFill" 
-               style="opacity: {{leverFrame === 1 ? 1 : 0}}"></image>     
-        <image class="machine-img overlay-img" src="/assets/images/lever_2.png" mode="scaleToFill" 
-               style="opacity: {{leverFrame === 2 ? 1 : 0}}"></image>     
-        <image class="machine-img overlay-img" src="/assets/images/lever_3.png" mode="scaleToFill" 
-               style="opacity: {{leverFrame === 3 ? 1 : 0}}"></image>
+      <view style="width:0;height:0;overflow:hidden;position:absolute;opacity:0;pointer-events:none;">
+        <image src="/assets/images/lever_0.png"></image>
+        <image src="/assets/images/lever_1.png"></image>
+        <image src="/assets/images/lever_2.png"></image>
+        <image src="/assets/images/lever_3.png"></image>
+      </view>
 
-        <view class="screen-frame-overlay" style="z-index: 999;">
-           <view class="reel-container">
+      <view class="machine-body-image-wrapper {{isFlowing ? 'flowing' : ''}}">
+        
+        <image class="machine-bg-img" src="/assets/images/lever_{{leverFrame}}.png" mode="widthFix"></image>
+        
+        <view class="screen-frame-overlay">
+          <view class="reel-container">
             <view class="reel">
               <view class="reel-inner {{spinning ? 'spinning' : 'stopped'}}" style="animation-duration: 0.6s">
                 <block wx:for="{{reel1}}" wx:key="index">
@@ -42,8 +43,6 @@
             <view class="win-line"></view>
           </view>
         </view>
-
-        
       </view>
     </view>
 
@@ -68,7 +67,8 @@
   </view>
 
   <view class="receipt-scene {{showReceipt ? 'enter' : ''}}" wx:else>
-     <view class="receipt-paper">
+    
+    <view class="receipt-paper">
       <view class="sawtooth-top"></view>
       <view class="receipt-body">
         <view class="r-header">

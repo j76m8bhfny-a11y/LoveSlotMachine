@@ -1,6 +1,6 @@
 .result-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #F8DEF6 0%, #FFB7B2 100%); 
+  background: #2C3E50;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -38,12 +38,6 @@
   position: relative;
   width: 650rpx; /* 放大到 650rpx */
   z-index: 10;
-  /* ✨✨ 必须保留这个定高！✨✨ */
-  /* 如果你的图片比例不同，请微调这个数值 */
-  height: 486rpx;
-  /* 建议：加一个浅灰色背景，这样在等待加载的那0.x秒里，用户能看到一个灰色的框占位，而不是完全的空白 */
-  background-color: #f0f0f0; 
-  border-radius: 40rpx;
 }
 
 /* ✨ 改动：幽灵占位图 */
@@ -101,31 +95,34 @@
 
 /* ✨✨ 改动：图片层叠样式 ✨✨ */
 .machine-img {
+  width: 100%;
   display: block;
+  border-radius: 40rpx; 
+  /* 平滑过渡，防止瞬间切换太生硬 */
+  transition: opacity 0.05s linear; 
+}
+
+/* 基座图：负责撑开高度 */
+.base-img {
+  position: relative;
+  z-index: 1;
+}
+
+/* 叠加图：绝对定位，覆盖在上面 */
+.overlay-img {
   position: absolute;
   top: 0;
   left: 0;
-  /* 👇 核心修改：强制宽高 100% 填满父容器 */
-  width: 100%;
-  height: 100%;
-
-  border-radius: 40rpx; 
-  /* 平滑过渡，防止瞬间切换太生硬 */
-  filter: drop-shadow(0 15rpx 25rpx rgba(0,0,0,0.4)); 
-  
-  /* 解决闪烁 */
-  /* transition: opacity 0.05s linear; 如果觉得还有点闪，可以把这行加上试一下，不行就删掉 */
-  
+  z-index: 2;
 }
-
 
 /* ✨✨ 屏幕定位适配 ✨✨ */
 .screen-frame-overlay {
   position: absolute;
-  top: 41%;        
-  left: 27%;       
-  width: 46%;      
-  height: 40%;      
+  top: 38%;        
+  left: 18%;       
+  width: 64%;      
+  height: 28%;     
   background: #222;
   border-radius: 12rpx; 
   overflow: hidden;
@@ -135,7 +132,7 @@
   display: flex;
   align-items: center;
   /* <--- 【修改】确保屏幕浮在所有图片上方 */
-  z-index: 999; 
+  z-index: 20; 
 }
 
 /* ... 滚轮和文字样式保持不变 ... */

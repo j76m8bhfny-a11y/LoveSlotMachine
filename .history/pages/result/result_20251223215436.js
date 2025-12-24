@@ -8,7 +8,6 @@ Page({
     isLoading: true,
     spinning: false,
     showReceipt: false,
-    imageLoaded: false,
     inputData: {},
     result: null,
     retryCount: 0,
@@ -49,9 +48,6 @@ Page({
         this.pullLever(inputData);
       }, 500);
     }
-  },
-  onImageLoad() {
-    this.setData({ imageLoaded: true });
   },
 
   generateReel() {
@@ -174,7 +170,7 @@ Page({
       } else {
         clearInterval(this.logTimer);
       }
-    }, 2000); 
+    }, 1500); 
   },
 
   handleSuccess(res) {

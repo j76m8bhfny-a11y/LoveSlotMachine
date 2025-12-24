@@ -1,6 +1,6 @@
 .result-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #F8DEF6 0%, #FFB7B2 100%); 
+  background: #2C3E50;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,7 +40,7 @@
   z-index: 10;
   /* ✨✨ 必须保留这个定高！✨✨ */
   /* 如果你的图片比例不同，请微调这个数值 */
-  height: 486rpx;
+  /*height: 975rpx;*/
   /* 建议：加一个浅灰色背景，这样在等待加载的那0.x秒里，用户能看到一个灰色的框占位，而不是完全的空白 */
   background-color: #f0f0f0; 
   border-radius: 40rpx;
@@ -115,6 +115,8 @@
   
   /* 解决闪烁 */
   /* transition: opacity 0.05s linear; 如果觉得还有点闪，可以把这行加上试一下，不行就删掉 */
+
+  transition: opacity 0.05s linear; 
   
 }
 

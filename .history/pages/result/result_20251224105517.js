@@ -174,7 +174,7 @@ Page({
       } else {
         clearInterval(this.logTimer);
       }
-    }, 2000); 
+    }, 1500); 
   },
 
   handleSuccess(res) {

@@ -1,6 +1,6 @@
 .result-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #F8DEF6 0%, #FFB7B2 100%); 
+  background: #2C3E50;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,6 +115,8 @@
   
   /* 解决闪烁 */
   /* transition: opacity 0.05s linear; 如果觉得还有点闪，可以把这行加上试一下，不行就删掉 */
+
+  transition: opacity 0.05s linear; 
   
 }
 
