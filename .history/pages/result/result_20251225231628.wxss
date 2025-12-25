@@ -165,7 +165,7 @@
 .card-header { background: #FFB7B2; padding: 16rpx 30rpx; display: flex; align-items: center; border-bottom: 4rpx solid #333; }
 .emoji-icon { font-size: 32rpx; margin-right: 16rpx; animation: bounce 2s infinite; }
 .header-title { color: #333; font-size: 28rpx; font-weight: 900; letter-spacing: 2rpx; }
-.card-body { height: 360rpx; padding: 24rpx; box-sizing: border-box; }
+.card-body { height: 260rpx; padding: 24rpx; box-sizing: border-box; }
 .log-bubble { background: #fff; color: #555; font-size: 26rpx; font-weight: bold; padding: 12rpx 24rpx; border-radius: 20rpx; border: 3rpx solid #eee; margin-bottom: 16rpx; width: fit-content; max-width: 90%; display: flex; align-items: center; gap: 10rpx; opacity: 0; transform: scale(0.8) translateY(20rpx); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 @keyframes popIn { to { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6rpx); } }

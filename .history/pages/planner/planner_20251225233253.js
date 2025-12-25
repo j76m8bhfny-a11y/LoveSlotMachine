@@ -113,29 +113,35 @@ Page({
   },
 
   fetchWeather(lon, lat) {
-    if (!SENIVERSE_KEY) return;
+    if (!SENIVERSE_KEY) {
+      wx.hideLoading();
+      return;
+    }
+
+    console.log(`正在请求心知天气: ${lat}:${lon}`);
 
     wx.request({
       url: `https://api.seniverse.com/v3/weather/now.json?key=${SENIVERSE_KEY}&location=${lat}:${lon}&language=zh-Hans&unit=c`,
       method: 'GET',
       success: (res) => {
-        if (res.statusCode === 200 && res.data.results) {
-          const result = res.data.results[0];
-          const now = result.now;
-          const loc = result.location; // ✨ 获取心知天气返回的城市信息
+        console.log('心知天气返回:', res);
 
+        if (res.statusCode === 200 && res.data.results) {
+          const now = res.data.results[0].now;
           this.setData({
             weather: now.text,        
-            temp: now.temperature,
-            // ✨✨ 核心修改：用天气接口里的城市名，自动填入位置栏 ✨✨
-            // 例如：把 "📍 点击获取定位" 自动变成 "📍 北京"
-            locationName: `📍 ${loc.name}` 
+            temp: now.temperature     
           });
+          wx.showToast({ title: `当地: ${now.text} ${now.temperature}°C`, icon: 'none' });
+        } else {
+          console.error('天气API异常:', res.data);
+          this.setData({ weather: '未知', temp: '25' }); 
         }
       },
       fail: (err) => {
-        console.error('天气请求失败:', err);
-      }
+        console.error('网络请求失败:', err);
+      },
+      complete: () => wx.hideLoading()
     });
   },
 

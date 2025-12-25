@@ -103,7 +103,7 @@
   border: 6rpx solid #D32F2F;
   box-shadow: 0 10rpx 0 #C62828; /* 立体按钮底座 */
   transition: all 0.1s;
-  /* ✨✨ 核心修改 3：强制撑满剩余空间 ✨✨ */
+ /* ✨✨ 核心修改 3：强制撑满剩余空间 ✨✨ */
   flex: 1;              /* 自动填满父容器的剩余宽度 */
   width: 100%;          /* 双重保险 */
   margin: 0 !important; /* ⚠️ 强制去掉 v2 自带的边距，防止变窄 */

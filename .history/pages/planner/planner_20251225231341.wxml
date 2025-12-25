@@ -1,0 +1,96 @@
+<view class="planner-page {{pageBgClass}}">
+  <scroll-view scroll-y class="scroll-content" show-scrollbar="{{false}}">
+    
+    <!-- 头部导航 -->
+    <view class="header">
+      <view class="back-icon">🔙</view>
+      <text class="page-title">定制心动参数</text>
+    </view>
+
+    <!-- 1. 关系气泡 (Bubble) -->
+    <view class="card-box section-card">
+      <view class="section-header">
+        <text class="icon">💞</text> <text>你们现在的状态？</text>
+      </view>
+      <view class="bubble-rack">
+        <block wx:for="{{relations}}" wx:key="id">
+          <view 
+            class="bubble {{selectedRelation === index ? 'active' : ''}}"
+            style="background-color: {{item.color}}"
+            bindtap="selectRelation" 
+            data-index="{{index}}"
+          >
+            <text class="bubble-main">{{item.label}}</text>
+            <text class="bubble-sub">{{item.sub}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 2. 时间转盘 (Time) -->
+    <view class="card-box section-card">
+      <view class="section-header">
+        <text class="icon">🕰️</text> <text>打算什么时候去？</text>
+      </view>
+      <view class="time-row">
+        <block wx:for="{{times}}" wx:key="index">
+          <view class="time-item {{selectedTime === index ? 'active' : ''}}" bindtap="selectTime" data-index="{{index}}">
+            <text class="time-emoji">{{item.icon}}</text>
+            <text class="time-label">{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 3. 预算金币堆 (Budget) -->
+    <view class="card-box section-card">
+      <view class="section-header">
+        <text class="icon">💸</text> <text>准备了多少米？</text>
+      </view>
+      
+      <view class="visual-area" style="margin-bottom: 20rpx; text-align: center;">
+         <budget-reaction value="{{budget}}"></budget-reaction>
+         <text class="budget-number" style="font-size: 40rpx; font-weight: bold; color: #333; margin-top: 10rpx; display:block;">¥{{budget}}</text>
+      </view>
+
+      <slider 
+        block-size="28" 
+        block-color="#FF6B6B" 
+        activeColor="#FFD700" 
+        backgroundColor="#f0f0f0" 
+        value="{{budget}}" 
+        min="0" max="500" step="10" 
+        bindchanging="onBudgetChange" 
+        bindchange="onBudgetChange"
+      />
+      <view class="slider-labels">
+        <text>穷游</text>
+        <text>土豪</text>
+      </view>
+    </view>
+
+    <!-- 4. 时空之门 (Space) -->
+    <view class="card-box section-card space-row">
+      <picker mode="date" value="{{date}}" bindchange="bindDateChange">
+        <view class="picker-btn">
+          <text>📅 {{date}}</text>
+        </view>
+      </picker>
+      
+      <view class="picker-btn location-btn" bindtap="chooseLocation">
+        <text class="pin-anim">📍</text> 
+        <text class="loc-text">{{locationName}}</text>
+      </view>
+    </view>
+
+    <view class="footer-spacer"></view>
+  </scroll-view>
+
+  <!-- 底部悬浮按钮 -->
+  <view class="bottom-bar">
+    <button class="coin-btn" hover-class="hover-btn" bindtap="submitConfig">
+      <view class="coin-slot"></view>
+      <text>投入硬币，开始！🪙</text>
+    </button>
+  </view>
+</view>

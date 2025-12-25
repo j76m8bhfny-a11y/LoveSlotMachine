@@ -87,14 +87,7 @@
 @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10rpx); } }
 
 .footer-spacer { height: 180rpx; }
-.bottom-bar {
-  position: fixed; bottom: 0; left: 0; width: 100%;
-  padding: 30rpx 40rpx 60rpx;
-  background: linear-gradient(to top, rgba(255,248,231,1) 80%, rgba(255,248,231,0));
-  z-index: 100;
-  display: flex;
-  box-sizing: border-box;
-}
+
 .coin-btn {
   background: #FF6B6B; color: #fff;
   border-radius: 60rpx; height: 110rpx;
@@ -103,14 +96,15 @@
   border: 6rpx solid #D32F2F;
   box-shadow: 0 10rpx 0 #C62828; /* 立体按钮底座 */
   transition: all 0.1s;
-  /* ✨✨ 核心修改 3：强制撑满剩余空间 ✨✨ */
-  flex: 1;              /* 自动填满父容器的剩余宽度 */
-  width: 100%;          /* 双重保险 */
-  margin: 0 !important; /* ⚠️ 强制去掉 v2 自带的边距，防止变窄 */
-  padding: 0;           /* 去掉默认内边距 */
-  box-sizing: border-box; /* 确保边框算在宽度内 */
+  width: 100%;
 }
-
+.bottom-bar {
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  padding: 30rpx 40rpx 60rpx;
+  background: linear-gradient(to top, rgba(255,248,231,1) 80%, rgba(255,248,231,0));
+  z-index: 100;
+  box-sizing: border-box;
+}
 .coin-btn:active {
   transform: translateY(10rpx);
   box-shadow: 0 0 0 #C62828;
