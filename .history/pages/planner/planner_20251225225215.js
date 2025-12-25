@@ -26,7 +26,7 @@ Page({
     pageBgClass: 'bg-pm',
     
     budget: 100,
-    //sliderValue: 34,
+    sliderValue: 34,
     // coins: [], <--- 【删除】这里不需要了，交给组件管
     
     date: '2025-05-20',
@@ -39,9 +39,12 @@ Page({
 
   onLoad() {
     const today = new Date().toISOString().substring(0, 10);
+    const initialBudget = 100;
+    
     this.setData({ 
       date: today,
-      budget: 100 // 默认 100
+      budget: initialBudget,
+      sliderValue: this.budgetToSlider(initialBudget)
     });
     // this.generateCoins(initialBudget); <--- 【删除】组件会自动监听 budget 变化并生成金币
     this.playBGM();
@@ -64,10 +67,33 @@ Page({
     this.playClickSound(); 
   },
   
+  // --- 预算滑块逻辑 ---
+  sliderToBudget(val) {
+    if (val > 100) val = (val / 5000) * 100;
+    let budget = 0;
+    if (val <= 10) budget = val * 5; 
+    else if (val <= 50) budget = 50 + (val - 10) * 6.25; 
+    else if (val <= 80) budget = 300 + (val - 50) * 23.33; 
+    else budget = 1000 + (val - 80) * 200; 
+    return Math.floor(budget / 10) * 10; 
+  },
+  
+  budgetToSlider(budget) {
+     if (budget <= 50) return budget / 5;
+     if (budget <= 300) return 10 + (budget - 50) / 6.25;
+     if (budget <= 1000) return 50 + (budget - 300) / 23.33;
+     return 80 + (budget - 1000) / 200;
+  },
+  
   onBudgetChange(e) {
-    // 直接取值，不需要算法转换了
-    const val = e.detail.value;
-    this.setData({ budget: val });
+    const sliderVal = e.detail.value;
+    const realBudget = this.sliderToBudget(sliderVal);
+    
+    if (realBudget !== this.data.budget) {
+      // 只要更新 budget，组件就会自动感知并播放动画
+      this.setData({ sliderValue: sliderVal, budget: realBudget });
+      // this.generateCoins... <--- 【删除】
+    }
   },
   
   // generateCoins(amount) { ... } <--- 【删除】整个函数都不需要了

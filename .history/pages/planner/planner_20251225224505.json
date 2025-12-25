@@ -1,5 +1,5 @@
 {
-  "usingComponents": {"budget-reaction": "/components/budget-reaction/index"},
+  "usingComponents": {"coin-pool": "/components/coin-pool/index"},
   "navigationBarTitleText": "定制心动参数",
   "navigationBarBackgroundColor": "#FFF8E7"
 }

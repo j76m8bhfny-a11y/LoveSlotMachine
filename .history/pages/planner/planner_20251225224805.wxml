@@ -48,9 +48,9 @@
         <text class="icon">💸</text> <text>准备了多少米？</text>
       </view>
       
-      <view class="visual-area" style="margin-bottom: 20rpx; text-align: center;">
-         <budget-reaction value="{{budget}}"></budget-reaction>
-         <text class="budget-number" style="font-size: 40rpx; font-weight: bold; color: #333; margin-top: 10rpx; display:block;">¥{{budget}}</text>
+      <view class="budget-container" style="margin-bottom: 20rpx;">
+         <text class="budget-number">¥{{budget}}</text>
+         <coin-pool value="{{budget}}"></coin-pool>
       </view>
 
       <slider 
@@ -58,8 +58,8 @@
         block-color="#FF6B6B" 
         activeColor="#FFD700" 
         backgroundColor="#f0f0f0" 
-        value="{{budget}}" 
-        min="0" max="500" step="10" 
+        value="{{sliderValue}}" 
+        min="0" max="100" step="1" 
         bindchanging="onBudgetChange" 
         bindchange="onBudgetChange"
       />

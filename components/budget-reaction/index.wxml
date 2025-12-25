@@ -1,0 +1,5 @@
+<view class="reaction-container">
+  <view class="emoji {{animClass}}">{{emoji}}</view>
+  
+  <view class="text-bubble">{{text}}</view>
+</view>

@@ -1,0 +1,69 @@
+.pool-container {
+  width: 100%;
+  height: 200rpx; /* 金币池的高度 */
+  position: relative;
+  overflow: hidden; /* 防止金币飞出容器边界 */
+  pointer-events: none; /* 让金币不妨碍点击 */
+}
+
+.coin {
+  position: absolute;
+  width: 70rpx;  /* 金币尺寸，可根据图片实际大小调整 */
+  height: 70rpx;
+  /* 初始位置在上方，准备掉落 */
+  top: -100rpx; 
+  opacity: 0;
+  transition: transform 0.3s; /* 旋转时的平滑过渡 */
+}
+
+/* --- 动画1: 掉落 (Drop) --- */
+/* 模拟重力：先慢后快，落地有轻微反弹 */
+.drop {
+  animation: dropAnim 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+}
+
+@keyframes dropAnim {
+  0% {
+    top: -100rpx;
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  80% {
+    /* 触底 */
+    top: auto;
+    bottom: 10rpx; 
+    transform: scale(1.1); /* 落地瞬间压扁一点点 */
+  }
+  100% {
+    opacity: 1;
+    top: auto;
+    /* 最终停留在 JS 计算出的 bottom 位置 */
+    transform: scale(1);
+  }
+}
+
+/* --- 动画2: 飞回 (Fly Back) --- */
+/* 模拟反重力：从当前位置直接吸到天上去 */
+.fly-back {
+  /* 关键：覆盖掉 drop 动画的定位，强制使用 absolute bottom 定位作为起点 */
+  top: auto !important; 
+  animation: flyBackAnim 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes flyBackAnim {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  20% {
+    /* 起飞前稍微下沉蓄力 */
+    transform: translateY(10rpx) scale(0.9);
+  }
+  100% {
+    bottom: 100%; /* 飞到顶部 */
+    opacity: 0;
+    transform: rotate(180deg) scale(0.5); /* 飞走时旋转变小 */
+  }
+}

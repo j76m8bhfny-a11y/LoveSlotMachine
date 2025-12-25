@@ -58,8 +58,8 @@
         block-color="#FF6B6B" 
         activeColor="#FFD700" 
         backgroundColor="#f0f0f0" 
-        value="{{budget}}" 
-        min="0" max="500" step="10" 
+        value="{{sliderValue}}" 
+        min="0" max="100" step="1" 
         bindchanging="onBudgetChange" 
         bindchange="onBudgetChange"
       />

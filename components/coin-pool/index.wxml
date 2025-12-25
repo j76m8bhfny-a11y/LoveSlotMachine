@@ -1,0 +1,10 @@
+<view class="pool-container">
+  <block wx:for="{{coins}}" wx:key="id">
+    <image 
+      class="coin {{item.isExiting ? 'fly-back' : 'drop'}}" 
+      src="{{item.src}}" 
+      mode="aspectFit"
+      style="left: {{item.left}}%; bottom: {{item.bottom}}rpx; z-index: {{item.zIndex}}; transform: rotate({{item.rotate}}deg); animation-delay: {{item.delay}}s;"
+    />
+  </block>
+</view>
