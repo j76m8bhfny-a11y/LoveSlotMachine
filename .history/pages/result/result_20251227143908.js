@@ -171,10 +171,6 @@ Page({
     }
 
     const keyword = keywordQueue[currentIndex];
-
-    console.log(`[调试] 当前要搜的词是: "${keyword}" (类型: ${typeof keyword})`);
-
-
     this.addLog({ type: 'search', text: `🛰️ 正在探测周边的 [${keyword}]...` });
 
     wx.getLocation({
@@ -198,127 +194,65 @@ Page({
             
             this.callAiToDecorate(bestPlace, keyword);
           } else {
-            // 1. 打印失败原因
-            const reason = pois.length > 0 ? "不符合纯玩标准" : "方圆50里都没有";
-            console.warn(`[跳过] ${keyword}: ${reason}`);
-            this.addLog({ type: 'skip', text: `[${keyword}] ${reason}，正在思考新方案...` });
+            // ❌ 搜到了地点，但全是工业园/小区/公司，判定为“无结果”
+            console.warn(`[类型过滤] 附近的 ${keyword} 都不适合约会，切换...`);
+            this.addLog({ type: 'skip', text: `附近的 ${keyword} 不太好玩，换个地方...` });
             
-            // 2. 指针下移
+            // 自动跳下一个词
             this.setData({ currentIndex: currentIndex + 1 });
-
-            // ✨✨✨ 关键修改：强制冷却 1.2 秒 ✨✨✨
-            // 高德免费版通常限制 QPS < 3，甚至更低。
-            // 加上这个 setTimeout，就算所有词都失败，也不会报错 10021。
-            setTimeout(() => {
-              this.executeNextStrategy();
-            }, 1200); 
+            this.executeNextStrategy(); 
           }
-        }).catch(err => {
-            console.error('高德API异常:', err);
-            
-            // ⚠️ 如果真的是 10021，说明还是太快了，这里我们要多歇会儿
-            let delay = 1200;
-            if (err && err.errCode === '10021') {
-                console.warn('触发限流，进入深度冷却...');
-                this.addLog({ type: 'error', text: '大脑过载，休息一下...' });
-                delay = 3000; // 休息3秒再试
-            }
-
-            this.setData({ currentIndex: currentIndex + 1 });
-            setTimeout(() => this.executeNextStrategy(), delay);
         });
       },
-      fail: () => { /* ... */ }
+      fail: () => { /* 定位失败逻辑 */ }
     });
   },
 
-  // ✨✨✨ 终极纯净版：所见即所得 (WYSIWYG) ✨✨✨
   isValidDateSpot(place, searchKeyword) {
-    // 1. 数据清洗：全部转小写，防止大小写差异导致匹配失败
     const name = (place.name || '').toLowerCase();
     const type = (place.type || '').toLowerCase();
-    const k = (searchKeyword || '').toLowerCase();
 
-    // ===========================================
-    // 1. ⛔️ 绝对黑名单 (维持原判，脏东西坚决不要)
-    // ===========================================
-    const blackList = [
-      '银行', 'atm', '营业厅', '中介', '房产', '公司', '物流', '厂', '园区',
-      '学校', '培训', '驾校', '派出所', '政府', '委员会', '办事处', 
-      '公厕', '垃圾', '停车场', '收费站', '加油站', '加水', '维修',
-      // 品牌黑名单 (拒绝快餐式约会)
-      '沙县', '拉面', '瑞幸', 'luckin', '蜜雪冰城', '全家', '7-eleven', '肯德基', '麦当劳'
-    ];
-    
-    if (blackList.some(bad => name.includes(bad) || type.includes(bad))) {
-      console.log(`[淘汰] 命中黑名单: ${name}`);
-      return false;
-    }
+    // 1. 黑名单 (保持不变，过滤掉银行、厕所等)
+    const blackList = ['银行', 'atm', '营业厅', '中介', '房产', '公司', '物流', '厂', '学校', '培训', '派出所', '公厕', '垃圾', '停车场', '瑞幸', '蜜雪冰城', '沙县', '快餐'];
+    if (blackList.some(bad => name.includes(bad) || type.includes(bad))) return false;
 
-    // ===========================================
-    // 2. 🎯 词义映射 (解决“搜A出B”的合理情况)
-    // ===========================================
-    // 这一步是为了防止“过于严格”。
-    // 比如：搜“爬山”，高德返回“XX风景区”或“XX森林公园”。
-    // 名字里没“爬山”二字，但它是对的。如果不做映射，会被误杀。
-    const keywordMapping = {
-      // 运动类
-      '爬山': ['山', '峰', '景区', '森林', '徒步', '绿道'],
-      '滑雪': ['滑雪', '雪场'],
-      '溜冰': ['溜冰', '滑冰', '冰上'],
-      '游泳': ['游泳', '水上'],
-      '射箭': ['射箭', '弓箭'],
-      
-      // 体验类
-      'diy': ['陶艺', '手工', '画室', '手作', '烘焙', '戒指'],
-      '猫咖': ['猫', '咪', '宠', '喵'],
-      '狗咖': ['狗', '汪', '宠'],
-      '电玩': ['电玩', '游戏', '机厅'],
-      '密室': ['密室', '逃脱'],
-      '剧本杀': ['剧本', '侦探'],
-      
-      // 休闲类
-      '温泉': ['温泉', '汤泉', '泡汤', '洗浴'],
-      '洗浴': ['洗浴', '汗蒸', '桑拿', '足疗', '按摩'],
-      '私影': ['私人影院', '影吧', '视听'],
-      '露营': ['露营', '营地', '帐篷'],
-      '野餐': ['公园', '草坪', '绿地']
+    // 2. 强校验 (保持不变，针对猫咖、滑雪等)
+    const strictMap = {
+      '猫咖': ['猫', '咪', '宠'],
+      '滑雪': ['滑雪', '雪'],
+      '温泉': ['温泉', '汤']
     };
-
-    // 如果搜索词在映射表里，检查结果是否包含相关词汇
-    if (keywordMapping[k]) {
-      const relatedWords = keywordMapping[k];
-      // 只要名字 OR 类型里 包含任意一个相关词，就通过
-      const isMatch = relatedWords.some(w => name.includes(w) || type.includes(w));
-      
-      if (isMatch) {
-        return true; // ✅ 匹配成功
-      } else {
-        console.log(`[淘汰] 强校验不符: 搜[${k}] 结果[${name}]`);
-        return false; // ❌ 搜爬山给了汤泉 -> 滚
-      }
+    if (strictMap[searchKeyword]) {
+      const required = strictMap[searchKeyword];
+      return required.some(w => name.includes(w) || type.includes(w));
     }
 
-    // ===========================================
-    // 3. 🔍 原始精准匹配 (没有保底了！)
-    // ===========================================
-    // 如果不在映射表里（比如搜“公园”、“动物园”、“KTV”这种标准词）
-    // 逻辑：名字里必须有这个词，或者分类里明确写了是这个类型。
-    // 绝不因为它是“好玩的地方”就放行。
+    // 3. ✨✨ 白名单升级：聚焦“玩乐” ✨✨
+    // 我们把白名单分为【极佳】和【勉强】
+    
+    // 【极佳】玩乐属性强，能呆很久
+    const playCategories = [
+      '风景', '公园', '植物园', '动物园', '古镇', '度假', // 户外
+      '博物馆', '美术馆', '展览', '科技馆', // 文化
+      '游乐', '影院', 'ktv', '剧本杀', '密室', '洗浴', '温泉', // 娱乐
+      '滑雪', '溜冰', '体育', '健身', // 运动
+      '购物中心', '商场', '步行街', '创意园' // 综合
+    ];
 
-    const nameHasIt = name.includes(k);
-    const typeHasIt = type.includes(k);
+    // 【体验型餐饮】(猫咖、酒吧、茶楼可以，但纯饭馆不行)
+    const vibeDining = ['咖啡', '茶楼', '酒吧', '甜品'];
 
-    if (nameHasIt || typeHasIt) {
+    const isPlay = playCategories.some(cat => type.includes(cat));
+    const isVibe = vibeDining.some(cat => type.includes(cat));
+
+    // 如果是纯餐饮（比如"中餐厅"），且没有搜具体的餐饮词，我们倾向于过滤掉
+    // 除非用户搜的就是"私房菜"这种
+    if (isPlay || isVibe) {
       return true;
     }
 
-    // 💀 到了这里说明：既没过映射，名字和类型也不含关键词。
-    // 比如：搜“海边”，结果“海鲜大排档” (假设黑名单没拦住，这里也会拦住，因为类型不对)
-    // 比如：搜“爬山”，结果“汤山洗浴” (名字含山，但如果有映射表会优先走映射表被拦；如果没有映射表，这里可能会误过，但我们在第2步已经处理了爬山)
-    
-    console.log(`[淘汰] 精准匹配失败: 搜[${k}] 结果[${name}] 类型[${type}]`);
-    return false;
+    // 兜底：名字包含搜索词
+    return name.includes(searchKeyword.toLowerCase());
   },
 
   // --- 🧠 核心 3：AI 润色 ---

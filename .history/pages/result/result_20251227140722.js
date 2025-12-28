@@ -106,52 +106,50 @@ Page({
 
   // --- 🧠 核心 1：生成策略队列 ---
   generateKeywordQueue(data) {
-    const { weatherContext, relation } = data;
+    const { budget, weatherContext } = data;
+    // data.weatherContext 格式示例: "中雨, 28°C" 或 "晴, 35"
+
+    // --- A. 环境判断 (升级版) ---
     
-    // -------------------------------------------
-    // 1. 🌡️ 温度与天气感知 (决定 Indoor 还是 Outdoor)
-    // -------------------------------------------
-    let temp = 25;
+    // 1. 判断是否下雨/恶劣天气 (保持原逻辑)
+    // 加上 || '' 是防止 weatherContext 为空时报错
+    const isPrecipitation = /雨|雪|暴|沙|霾/.test(weatherContext || '');
+
+    // 2. 提取温度数值 (新增逻辑)
+    let temp = 25; // 给一个默认的舒适温度作为兜底
+    // 使用正则 /(-?\d+)/ 提取字符串里的第一个数字 (支持负数)
     const tempMatch = (weatherContext || '').match(/(-?\d+)/);
-    if (tempMatch) temp = parseInt(tempMatch[0]);
-    const isRaining = /雨|雪|暴|沙/.test(weatherContext || '');
-    
-    // 逻辑：下雨 OR 太热(>30) OR 太冷(<5) -> 必须室内
-    // 这里的 30 和 5 是人体舒适阈值，超过就不适合在外面逛一天了
-    const isBadWeather = isRaining || temp > 30 || temp < 5;
-    const envKey = isBadWeather ? 'indoor' : 'outdoor';
-
-    console.log(`[决策] 天气:${weatherContext} 温度:${temp} -> 环境:${envKey}`);
-
-    // -------------------------------------------
-    // 2. ❤️ 情感状态感知 (决定 Safe 还是 Intimate)
-    // -------------------------------------------
-    // 初识/暧昧 -> 需要安全感、话题、避免尴尬 -> Safe池
-    // 热恋/稳定 -> 需要互动、肢体接触、新鲜感 -> Intimate池
-    
-    let emotionKey = 'safe'; // 默认安全牌
-    if (relation === '如胶似漆' || relation === '相爱相杀' || relation === '老夫老妻') {
-      emotionKey = 'intimate';
+    if (tempMatch) {
+      temp = parseInt(tempMatch[0]);
     }
 
-    console.log(`[决策] 关系:${relation} -> 风格:${emotionKey}`);
-
-    // -------------------------------------------
-    // 3. 🎱 取词与混合
-    // -------------------------------------------
-    // 主策略
-    let pool = [...KEYWORD_POOLS[envKey][emotionKey]];
-
-    // 💡 策略补充：
-    // 如果是"老夫老妻"(稳定)，有时候反而喜欢去"初识"的地方找回忆，
-    // 或者如果是"热恋"，有时候也想去"公园"散步。
-    // 所以我们混入 30% 对方池子的词，防止太单调。
-    const otherKey = emotionKey === 'safe' ? 'intimate' : 'safe';
-    pool = pool.concat(this.getRandom(KEYWORD_POOLS[envKey][otherKey], 3));
-
-    // 洗牌
-    const queue = this.shuffle(pool);
+    // 3. 综合决策
+    // 规则：下雨 OR 太热(>32°) OR 太冷(<5°) -> 统统赶去室内
+    const isBadWeather = isPrecipitation || temp > 32 || temp < 5;
     
+    const envKey = isBadWeather ? 'indoor' : 'outdoor';
+
+    // 打印日志方便调试，看看它到底判对了没
+    console.log(`[策略引擎] 原文:${weatherContext} => 提取温度:${temp}° => 判定环境:${envKey}`);
+
+
+    // --- B. 预算判断 (保持不变) ---
+    let budgetKey = 'low';
+    const b = parseInt(budget);
+    if (b >= 100 && b < 300) budgetKey = 'medium';
+    if (b >= 300) budgetKey = 'high';
+
+    // --- C. 取词 + 混入 (保持不变) ---
+    // ⚠️ 注意：要确保 KEYWORD_POOLS 已经引入
+    let pool = [...KEYWORD_POOLS[envKey][budgetKey]];
+    
+    // 增加一点惊喜：混入少量低价好去处
+    if (budgetKey !== 'low') {
+      pool = pool.concat(this.getRandom(KEYWORD_POOLS[envKey]['low'], 3));
+    }
+
+    // D. 洗牌并保存
+    const queue = this.shuffle(pool);
     this.setData({ 
       keywordQueue: queue,
       currentIndex: 0
@@ -171,10 +169,6 @@ Page({
     }
 
     const keyword = keywordQueue[currentIndex];
-
-    console.log(`[调试] 当前要搜的词是: "${keyword}" (类型: ${typeof keyword})`);
-
-
     this.addLog({ type: 'search', text: `🛰️ 正在探测周边的 [${keyword}]...` });
 
     wx.getLocation({
@@ -198,127 +192,93 @@ Page({
             
             this.callAiToDecorate(bestPlace, keyword);
           } else {
-            // 1. 打印失败原因
-            const reason = pois.length > 0 ? "不符合纯玩标准" : "方圆50里都没有";
-            console.warn(`[跳过] ${keyword}: ${reason}`);
-            this.addLog({ type: 'skip', text: `[${keyword}] ${reason}，正在思考新方案...` });
+            // ❌ 搜到了地点，但全是工业园/小区/公司，判定为“无结果”
+            console.warn(`[类型过滤] 附近的 ${keyword} 都不适合约会，切换...`);
+            this.addLog({ type: 'skip', text: `附近的 ${keyword} 不太好玩，换个地方...` });
             
-            // 2. 指针下移
+            // 自动跳下一个词
             this.setData({ currentIndex: currentIndex + 1 });
-
-            // ✨✨✨ 关键修改：强制冷却 1.2 秒 ✨✨✨
-            // 高德免费版通常限制 QPS < 3，甚至更低。
-            // 加上这个 setTimeout，就算所有词都失败，也不会报错 10021。
-            setTimeout(() => {
-              this.executeNextStrategy();
-            }, 1200); 
+            this.executeNextStrategy(); 
           }
-        }).catch(err => {
-            console.error('高德API异常:', err);
-            
-            // ⚠️ 如果真的是 10021，说明还是太快了，这里我们要多歇会儿
-            let delay = 1200;
-            if (err && err.errCode === '10021') {
-                console.warn('触发限流，进入深度冷却...');
-                this.addLog({ type: 'error', text: '大脑过载，休息一下...' });
-                delay = 3000; // 休息3秒再试
-            }
-
-            this.setData({ currentIndex: currentIndex + 1 });
-            setTimeout(() => this.executeNextStrategy(), delay);
         });
       },
-      fail: () => { /* ... */ }
+      fail: () => { /* 定位失败逻辑 */ }
     });
   },
 
-  // ✨✨✨ 终极纯净版：所见即所得 (WYSIWYG) ✨✨✨
   isValidDateSpot(place, searchKeyword) {
-    // 1. 数据清洗：全部转小写，防止大小写差异导致匹配失败
-    const name = (place.name || '').toLowerCase();
-    const type = (place.type || '').toLowerCase();
-    const k = (searchKeyword || '').toLowerCase();
+    const name = place.name || '';
+    const type = place.type || ''; 
+    const address = place.address || '';
 
-    // ===========================================
-    // 1. ⛔️ 绝对黑名单 (维持原判，脏东西坚决不要)
-    // ===========================================
+    // 1. ⛔️ 绝对黑名单 (新增了瑞幸、快餐等不适合约会的品牌)
     const blackList = [
-      '银行', 'atm', '营业厅', '中介', '房产', '公司', '物流', '厂', '园区',
-      '学校', '培训', '驾校', '派出所', '政府', '委员会', '办事处', 
-      '公厕', '垃圾', '停车场', '收费站', '加油站', '加水', '维修',
-      // 品牌黑名单 (拒绝快餐式约会)
-      '沙县', '拉面', '瑞幸', 'luckin', '蜜雪冰城', '全家', '7-eleven', '肯德基', '麦当劳'
+      // 机构类
+      '银行', 'ATM', '营业厅', '中介', '房产', '公司', '物流', '厂', 
+      '幼儿园', '小学', '中学', '培训', '加水', '公厕', '垃圾', '派出所', '政府', 
+      // ❌ 氛围杀手类 (快消/快餐连锁) -> 约会避雷！
+      '瑞幸', 'luckin', '库迪', 'Cotti', '蜜雪冰城', 
+      '麦当劳', '肯德基', '必胜客', '汉堡王', '沙县小吃', '兰州拉面',
+      '星巴克', // 星巴克看情况，如果你觉得它太商务也可以拉黑，或者留着兜底
+      '全家', '7-Eleven', '罗森'
     ];
-    
+
+    // 如果名字里包含黑名单，直接枪毙
     if (blackList.some(bad => name.includes(bad) || type.includes(bad))) {
-      console.log(`[淘汰] 命中黑名单: ${name}`);
+      console.log(`[过滤] 命中黑名单: ${name}`);
       return false;
     }
 
-    // ===========================================
-    // 2. 🎯 词义映射 (解决“搜A出B”的合理情况)
-    // ===========================================
-    // 这一步是为了防止“过于严格”。
-    // 比如：搜“爬山”，高德返回“XX风景区”或“XX森林公园”。
-    // 名字里没“爬山”二字，但它是对的。如果不做映射，会被误杀。
-    const keywordMapping = {
-      // 运动类
-      '爬山': ['山', '峰', '景区', '森林', '徒步', '绿道'],
-      '滑雪': ['滑雪', '雪场'],
-      '溜冰': ['溜冰', '滑冰', '冰上'],
-      '游泳': ['游泳', '水上'],
-      '射箭': ['射箭', '弓箭'],
-      
-      // 体验类
-      'diy': ['陶艺', '手工', '画室', '手作', '烘焙', '戒指'],
+    // 2. 🎯 强相关性校验 (核心修复逻辑)
+    // 逻辑：搜什么，就得是什么。
+    // 如果搜 "猫咖"，结果里必须带 "猫" 或 "宠" 或 "动物"；不能光是 "咖啡"。
+    
+    // 我们定义一些需要"特殊照顾"的强关键词
+    const strictMap = {
       '猫咖': ['猫', '咪', '宠', '喵'],
-      '狗咖': ['狗', '汪', '宠'],
-      '电玩': ['电玩', '游戏', '机厅'],
-      '密室': ['密室', '逃脱'],
-      '剧本杀': ['剧本', '侦探'],
-      
-      // 休闲类
-      '温泉': ['温泉', '汤泉', '泡汤', '洗浴'],
-      '洗浴': ['洗浴', '汗蒸', '桑拿', '足疗', '按摩'],
-      '私影': ['私人影院', '影吧', '视听'],
-      '露营': ['露营', '营地', '帐篷'],
-      '野餐': ['公园', '草坪', '绿地']
+      '狗咖': ['狗', '汪', '宠', '柴犬', '柯基'],
+      '滑雪': ['滑雪', '雪场'],
+      '温泉': ['温泉', '汤泉', '洗浴'],
+      '电玩': ['电玩', '游戏', '机厅']
     };
 
-    // 如果搜索词在映射表里，检查结果是否包含相关词汇
-    if (keywordMapping[k]) {
-      const relatedWords = keywordMapping[k];
-      // 只要名字 OR 类型里 包含任意一个相关词，就通过
-      const isMatch = relatedWords.some(w => name.includes(w) || type.includes(w));
+    // 如果当前的搜索词在严格映射表里 (比如是 猫咖)
+    if (strictMap[searchKeyword]) {
+      const requiredWords = strictMap[searchKeyword];
+      // 检查名字或类型里是否包含从属词
+      const hasStrictMatch = requiredWords.some(w => name.includes(w) || type.includes(w));
       
-      if (isMatch) {
-        return true; // ✅ 匹配成功
-      } else {
-        console.log(`[淘汰] 强校验不符: 搜[${k}] 结果[${name}]`);
-        return false; // ❌ 搜爬山给了汤泉 -> 滚
+      if (!hasStrictMatch) {
+        console.log(`[过滤] 强校验失败: 搜[${searchKeyword}]但结果是[${name}]`);
+        return false; // 瑞幸咖啡会被这里拦住，因为它不含"猫/宠"
+      }
+    } else {
+      // 普通词 (比如 "公园")，只要名字或类型包含搜索词即可
+      // 比如搜"书店"，结果"新华书店"(含书店) -> 通过
+      // 比如搜"书店"，结果"文具店"(不含书店) -> 拒绝
+      if (!name.includes(searchKeyword) && !type.includes(searchKeyword)) {
+         // 还有一种情况：高德的 type 包含，但名字不包含。
+         // 比如搜"咖啡厅"，Name="漫咖啡", Type="餐饮;咖啡厅"。
+         // 所以这里稍微放宽一点：只要 Type 或 Name 包含 搜索词 即可。
+         // 如果都不包含，那就真的不对版了。
+         console.log(`[过滤] 关键词不匹配: 搜[${searchKeyword}]但结果是[${name}]`);
+         return false; 
       }
     }
 
-    // ===========================================
-    // 3. 🔍 原始精准匹配 (没有保底了！)
-    // ===========================================
-    // 如果不在映射表里（比如搜“公园”、“动物园”、“KTV”这种标准词）
-    // 逻辑：名字里必须有这个词，或者分类里明确写了是这个类型。
-    // 绝不因为它是“好玩的地方”就放行。
+    // 3. ✅ 基础类型白名单 (保底，确保是大类正确的)
+    const whiteListCategories = [
+      '餐饮', '冷饮', '咖啡', '茶楼', '酒吧', '甜品', 
+      '休闲', '娱乐', '影院', 'KTV', '剧院', '游乐', '度假', 
+      '风景', '公园', '植物园', '动物园', '水族馆', '古镇', 
+      '博物馆', '美术馆', '图书馆', '展览', '文化', 
+      '体育', '健身', '滑雪', '溜冰', '购物', '商场', '书店', '花鸟'
+    ];
 
-    const nameHasIt = name.includes(k);
-    const typeHasIt = type.includes(k);
+    const isWhiteListed = whiteListCategories.some(cat => type.includes(cat));
 
-    if (nameHasIt || typeHasIt) {
-      return true;
-    }
-
-    // 💀 到了这里说明：既没过映射，名字和类型也不含关键词。
-    // 比如：搜“海边”，结果“海鲜大排档” (假设黑名单没拦住，这里也会拦住，因为类型不对)
-    // 比如：搜“爬山”，结果“汤山洗浴” (名字含山，但如果有映射表会优先走映射表被拦；如果没有映射表，这里可能会误过，但我们在第2步已经处理了爬山)
-    
-    console.log(`[淘汰] 精准匹配失败: 搜[${k}] 结果[${name}] 类型[${type}]`);
-    return false;
+    // 最终结论
+    return isWhiteListed;
   },
 
   // --- 🧠 核心 3：AI 润色 ---

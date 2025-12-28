@@ -198,37 +198,17 @@ Page({
             
             this.callAiToDecorate(bestPlace, keyword);
           } else {
-            // 1. 打印失败原因
-            const reason = pois.length > 0 ? "不符合纯玩标准" : "方圆50里都没有";
-            console.warn(`[跳过] ${keyword}: ${reason}`);
-            this.addLog({ type: 'skip', text: `[${keyword}] ${reason}，正在思考新方案...` });
+            // ❌ 搜到了地点，但全是工业园/小区/公司，判定为“无结果”
+            console.warn(`[类型过滤] 附近的 ${keyword} 都不适合约会，切换...`);
+            this.addLog({ type: 'skip', text: `附近的 ${keyword} 不太好玩，换个地方...` });
             
-            // 2. 指针下移
+            // 自动跳下一个词
             this.setData({ currentIndex: currentIndex + 1 });
-
-            // ✨✨✨ 关键修改：强制冷却 1.2 秒 ✨✨✨
-            // 高德免费版通常限制 QPS < 3，甚至更低。
-            // 加上这个 setTimeout，就算所有词都失败，也不会报错 10021。
-            setTimeout(() => {
-              this.executeNextStrategy();
-            }, 1200); 
+            this.executeNextStrategy(); 
           }
-        }).catch(err => {
-            console.error('高德API异常:', err);
-            
-            // ⚠️ 如果真的是 10021，说明还是太快了，这里我们要多歇会儿
-            let delay = 1200;
-            if (err && err.errCode === '10021') {
-                console.warn('触发限流，进入深度冷却...');
-                this.addLog({ type: 'error', text: '大脑过载，休息一下...' });
-                delay = 3000; // 休息3秒再试
-            }
-
-            this.setData({ currentIndex: currentIndex + 1 });
-            setTimeout(() => this.executeNextStrategy(), delay);
         });
       },
-      fail: () => { /* ... */ }
+      fail: () => { /* 定位失败逻辑 */ }
     });
   },
 
