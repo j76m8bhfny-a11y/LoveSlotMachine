@@ -32,7 +32,7 @@ const STRATEGY_PACKS = {
     id: 'NATURE',
     name: '拥抱自然',
     // 110102=动物园, 110103=植物园, 110200=风景名胜(通用), 110201=世界遗产
-    types: '110102|080503|060501|110200|110201|110202', 
+    types: '110102|110103|110200|110201', 
     desc: '逃离喧嚣，去大自然里大口呼吸'
   },
 
@@ -40,8 +40,8 @@ const STRATEGY_PACKS = {
   FUN_ACTIVE: {
     id: 'FUN_ACTIVE',
     name: '活力时光',
-    // 110104=水族馆, 080106=滑雪场, 080505=水上活动中心
-    types: '110104|080106|220103|220101',
+    // 080501=游乐场, 110104=水族馆, 080106=滑雪场, 080505=水上活动中心
+    types: '080501|110104|080106|080505',
     desc: '释放荷尔蒙，在欢笑中拉近距离'
   },
 
@@ -59,31 +59,33 @@ const STRATEGY_PACKS = {
     id: 'INTIMATE',
     name: '浪漫私语',
     // 080602=音乐厅, 071400=洗浴推拿(需严格筛选), 110208=海滩
-    types: '080602|071400|110208|1060502',
+    types: '080602|071400|110208',
     desc: '享受只属于两个人的静谧时光'
   }
 };
 
 /**
  * 🧠 核心算法：根据环境生成策略队列
- * @param {Object} context - { weatherContext, relation, time }
+ * @param {Object} context - { weather, relationship, time, budget }
  */
 function getStrategies(context) {
-  // 简单解析参数
-  const weatherText = context.weatherContext || '';
-  const relation = context.relation || '暧昧中';
-  
-  // 1. 🌡️ 简单的环境感知
-  const isBadWeather = /雨|雪|暴|沙/.test(weatherText) || parseInt(weatherText) > 30;
-  
+  // 默认值保护
+  const weather = context.weather || 'Sunny'; // Sunny, Rain, Snow, Extreme
+  const relationship = context.relationship || 'First'; // First, Friend, Intimate
+  const time = context.time || 'Day'; // Day, Night
+
   let queue = [];
 
-  // 2. ⛈️ 天气维度 (物理层)
+  // ===================================
+  // 1. ⛈️ 天气过滤 (物理层)
+  // ===================================
+  const isBadWeather = ['Rain', 'Snow', 'Extreme'].includes(weather);
+
   if (isBadWeather) {
     // 坏天气 -> 强制室内
     queue.push(STRATEGY_PACKS.CULTURE);       // 博物馆/美术馆
-    queue.push(STRATEGY_PACKS.CITY_WALK);     // 商场
-    queue.push(STRATEGY_PACKS.INDOOR_SPORT);  // 保龄球
+    queue.push(STRATEGY_PACKS.CITY_WALK);     // 商场/室内步行街
+    queue.push(STRATEGY_PACKS.INDOOR_SPORT);  // 保龄球/溜冰
   } else {
     // 好天气 -> 优先室外，室内兜底
     queue.push(STRATEGY_PACKS.NATURE);        // 动植物园 (首选)
@@ -91,22 +93,43 @@ function getStrategies(context) {
     queue.push(STRATEGY_PACKS.CITY_WALK);     // 逛街 (兜底)
   }
 
-  // 3. ❤️ 关系维度 (心理层)
-  // 如果是"如胶似漆"或"老夫老妻"，可以加点亲密的
-  if (['如胶似漆', '相爱相杀', '老夫老妻'].includes(relation)) {
+  // ===================================
+  // 2. ❤️ 关系微调 (心理层)
+  // ===================================
+  if (relationship === 'Intimate' || relationship === 'Couple') {
+    // 关系好 -> 插入亲密包到最前面
     queue.unshift(STRATEGY_PACKS.INTIMATE); 
-  } 
-  
-  // 如果是"初次见面"，确保文化包在前面，且去掉太亲密的
-  if (relation === '初次见面') {
+  } else if (relationship === 'First') {
+    // 初次见面 -> 确保【文化包】在前面 (有话聊，安全)
+    // 并且过滤掉 INTIMATE (洗浴/海滩可能太激进)
     queue = queue.filter(p => p.id !== 'INTIMATE');
-    if (!queue.includes(STRATEGY_PACKS.CULTURE)) {
-        queue.unshift(STRATEGY_PACKS.CULTURE);
+    // 如果是好天气，确保【玩乐包】也在，避免只逛公园尴尬
+    if (!isBadWeather) {
+        // 重新排序：玩乐(不冷场) > 自然 > 文化
+        // 这里简单处理，保持上面的 push 顺序即可
     }
   }
-  queue.sort(() => Math.random() - 0.5);
 
-  return queue; // 返回策略对象数组
+  // ===================================
+  // 3. 🌙 时间微调 (物理层)
+  // ===================================
+  if (time === 'Night') {
+    // 晚上 -> 去掉动物园/植物园 (通常关门了)
+    queue = queue.filter(p => p.id !== 'NATURE');
+    // 晚上 -> 加上亲密包 (音乐厅/夜景)
+    if (!queue.includes(STRATEGY_PACKS.INTIMATE) && relationship !== 'First') {
+        queue.push(STRATEGY_PACKS.INTIMATE);
+    }
+    // 晚上 -> 商场/步行街优先级提升
+    // 把 CITY_WALK 移到前面
+    const cityWalk = queue.find(p => p.id === 'CITY_WALK');
+    if (cityWalk) {
+        queue = queue.filter(p => p.id !== 'CITY_WALK');
+        queue.unshift(cityWalk);
+    }
+  }
+
+  return queue; // 返回一个策略对象数组
 }
 
 module.exports = {

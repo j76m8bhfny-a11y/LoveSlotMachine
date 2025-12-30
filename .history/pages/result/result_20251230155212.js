@@ -2,6 +2,7 @@
 const strategyData = require('../../utils/strategyData.js');
 const locationService = require('../../utils/locationService.js');
 const { getAIRecommendation } = require('../../utils/api.js');
+const finalPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
 const ICONS = ['🍎', '🍋', '🍉', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝', '💎'];
 
@@ -288,7 +289,7 @@ Page({
   },
 
   callAiToDecorate(place, keyword) {
-    this.addLog({ type: 'ai', text: '🧠 AI正在为地点注入灵魂...' });
+    this.addLog({ type: 'ai', text: '✨ 正在生成推荐理由...' });
 
     const requestData = { 
       ...this.data.inputData,
@@ -316,11 +317,9 @@ Page({
   },
 
   startAnalysisSimulation(data) {
-    const relation = data.relation || '未知关系';
-    const weather = data.weatherContext || '未知天气';
     const initialLogs = [
-      { type: 'init', text: `正在读取 ${relation} 关系模型...` },
-      { type: 'weather', text: `加载天气数据：${weather}...` },
+      { type: 'init', text: '🔍 正在全城搜索...' }, // 简单直接
+      { type: 'weather', text: `☁️ 匹配天气：${data.weatherContext || '...'} ` },
     ];
     this.setData({ analysisLogs: initialLogs });
   },

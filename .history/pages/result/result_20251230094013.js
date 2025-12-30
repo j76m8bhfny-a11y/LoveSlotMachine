@@ -79,15 +79,15 @@ Page({
     this.executeNextStrategy();
   },
 
-  // pages/result/result.js
-
-  // --- 🧠 核心：执行搜索 (V8.0 单点盲盒版) ---
+  // --- 🧠 核心：执行搜索 ---
   executeNextStrategy() {
-    // 1. 初始化策略队列 (如果是首次运行)
+    // 1. 生成策略
     if (this.data.strategyQueue.length === 0) {
         const strategies = strategyData.getStrategies(this.data.inputData);
-        strategies.sort(() => Math.random() - 0.5); // 策略包乱序
+        // 洗牌策略，保证随机性
+        strategies.sort(() => Math.random() - 0.5);
         this.setData({ strategyQueue: strategies });
+        console.log('🎲 生成策略队列:', strategies.map(s => s.name));
         
         if (strategies.length === 0) {
             this.addLog({ type: 'error', text: 'AI 觉得这条件没法玩...' });
@@ -99,100 +99,63 @@ Page({
 
     // 2. 边界检查
     if (currentIndex >= strategyQueue.length) {
+      console.warn('⚠️ 所有策略包都试过了，实在找不到更多结果了。');
       this.addLog({ type: 'error', text: '搜遍全城也没找到更多合适的...' });
       this.setData({ isLoading: false, showReceipt: true, result: null });
       return;
     }
 
-    // 3. 取出当前策略包
+    // 3. 取出当前策略
     const currentPack = strategyQueue[currentIndex];
-    // 注意：这里不要急着 currentIndex + 1，因为如果这个包里的某个子分类没搜到，我们还要试包里的其他分类
-    // 我们改用一个内部递归的方式来处理当前包的所有子分类
+    this.setData({ currentIndex: currentIndex + 1 });
 
-    const logText = `🛰️ [第${currentIndex + 1}轮] 锁定场景: ${currentPack.name}`;
+    const logText = `🛰️ [第${currentIndex + 1}轮] 扫描: ${currentPack.name}`;
     this.addLog({ type: 'search', text: logText });
+    console.log(`\n>>> 开始执行策略: ${currentPack.name} (ID: ${currentPack.id})`);
+    console.log(`>>> 目标TypeCodes: ${currentPack.types}`);
 
-    // 4. 🎲 核心逻辑：从当前包里随机选一个分类搜，搜不到就换一个，直到有结果
-    // 将 "060101|110204" 拆分为 ['060101', '110204']
-    const allTypes = currentPack.types.split('|');
-    
-    // 调用递归搜索函数
-    this.searchSingleTypeRecursive(allTypes, currentPack, () => {
-        // 如果当前包的所有子分类都试完了也没结果，就去下一个包
-        this.setData({ currentIndex: currentIndex + 1 });
-        this.executeNextStrategy();
-    });
-  },
-
-  /**
-   * ♻️ 递归搜索子分类
-   * @param {Array} typeList - 待选的分类列表 ['060101', '110204']
-   * @param {Object} pack - 当前策略包信息
-   * @param {Function} onFail - 全都搜不到时的回调
-   */
-  searchSingleTypeRecursive(typeList, pack, onFail) {
-    if (typeList.length === 0) {
-        console.warn(`❌ ${pack.name} 下的所有分类都试过了，全军覆没`);
-        onFail(); 
-        return;
-    }
-
-    // 1. 随机抽一个 (比如抽中纪念馆)
-    const randomIndex = Math.floor(Math.random() * typeList.length);
-    const targetType = typeList[randomIndex];
-    
-    // 从列表中移除它，防止下次重复抽
-    const remainingTypes = typeList.filter((_, i) => i !== randomIndex);
-
-    console.log(`\n>>> 🎲 盲盒选中分类: ${targetType} (属于 ${pack.name})`);
-    
     wx.getLocation({
       type: 'gcj02',
       success: (res) => {
         const userLoc = `${res.longitude},${res.latitude}`;
         
-        // 2. 发起搜索 (只搜这一个类型)
-        locationService.searchByType(targetType, userLoc).then(data => {
-            console.log(`📡 API响应 [Code:${targetType}]:`, data);
+        locationService.searchByType(currentPack.types, userLoc).then(data => {
+            // 🐛🐛🐛 打印高德原始返回数据 🐛🐛🐛
+            console.log(`📡 高德API响应 [${currentPack.name}]:`, data);
 
             if (data && data.poisData && data.poisData.length > 0) {
-                console.log(`📦 命中数量: ${data.poisData.length}`);
+                console.log(`📦 原始候选数量: ${data.poisData.length} 个`);
                 
-                // 3. 筛选
-                const sortedCandidates = this.rankPois(data.poisData, this.data.inputData.budget, targetType);
+                // 4. 选妃
+                const sortedCandidates = this.rankPois(data.poisData, this.data.inputData.budget, currentPack.types);
                 
+                console.log(`🏆 最终入围数量: ${sortedCandidates.length} 个`);
+
                 if (sortedCandidates.length > 0) {
-                    // 🎉 搜到了！
-                    // 这里的逻辑是：既然用户选择了"随机一个"，我们就在这一个分类里挑最好的
-                    
-                    // Top 3 随机 (增加一点点变数)
-                    const topN = sortedCandidates.slice(0, 3);
-                    const finalIndex = Math.floor(Math.random() * topN.length);
-                    const bestPlace = topN[finalIndex];
+                    // Top 5 随机
+                    const topN = sortedCandidates.slice(0, 5);
+                    const randomIndex = Math.floor(Math.random() * topN.length);
+                    const bestPlace = topN[randomIndex];
 
-                    // 记录历史
+                    // 记录到历史
                     const newHistory = [...this.data.historyIds, bestPlace.name];
-                    this.setData({ 
-                        historyIds: newHistory,
-                        currentIndex: this.data.currentIndex + 1 // 成功了才推进到下一个大策略
-                    });
+                    this.setData({ historyIds: newHistory });
 
-                    console.log(`✅ 最终选中: ${bestPlace.name}`);
-                    this.addLog({ type: 'found', text: `✅ 发现宝藏：${bestPlace.name}` });
-                    this.callAiToDecorate(bestPlace, pack.name);
+                    console.log(`✅ 最终选中: ${bestPlace.name} (评分:${bestPlace._score})`);
+                    this.addLog({ type: 'found', text: `✅ 优选结果：${bestPlace.name}` });
+                    this.callAiToDecorate(bestPlace, currentPack.name);
                 } else {
-                    console.warn(`⚠️ [${targetType}] 有数据但被 rankPois 过滤完，重试下一个分类...`);
-                    // 递归：试剩下的类型
-                    this.searchSingleTypeRecursive(remainingTypes, pack, onFail);
+                    console.warn(`❌ ${currentPack.name} 有原始数据，但被 rankPois 全部过滤了`);
+                    this.executeNextStrategy(); 
                 }
             } else {
-                console.warn(`⚠️ [${targetType}] 高德返回 0 结果，重试下一个分类...`);
-                // 递归：试剩下的类型
-                this.searchSingleTypeRecursive(remainingTypes, pack, onFail);
+                console.warn(`❌ ${currentPack.name} 高德返回空数据 (0 results)`);
+                this.executeNextStrategy();
             }
         });
       },
-      fail: () => {
+      fail: (err) => {
+        console.error('定位失败:', err);
         this.addLog({ type: 'error', text: '请授权定位' });
         this.setData({ spinning: false });
       }
@@ -200,18 +163,22 @@ Page({
   },
 
   /**
-   * 🏆 V6.7 严厉分级过滤 (封杀荷花池/无关景点)
+   * 🏆 排名 + 验毒 + 打印日志
+   */
+  /**
+   * 🏆 V6.5 智能分级排序算法 (降权距离 + 严格分级)
    */
   rankPois(pois, budget, allowedTypes) {
     const validPois = [];
     const userBudget = budget ? parseInt(budget) : 9999;
     const { historyIds } = this.data;
 
-    console.group('🔍 V6.7 严厉筛选执行中...');
+    console.group('🔍 V6.5 智能筛选执行中...');
 
     pois.forEach((p) => {
         const name = p.name;
         const typeCode = p.typecode || '';
+        // 确保评分是数字，如果没有评分给个 4.0 的中间分
         const rating = (p.biz_ext && p.biz_ext.rating && p.biz_ext.rating.length > 0) 
                        ? parseFloat(p.biz_ext.rating) 
                        : 4.0; 
@@ -220,64 +187,76 @@ Page({
         // 0. 记忆去重
         if (historyIds.includes(name)) return;
 
-        // 1. 防伪验毒
+        // 1. 防伪验毒 (白名单检查)
         if (allowedTypes && !allowedTypes.includes(typeCode)) return;
 
-        // 2. 预算过滤
+        // 2. 💰 预算过滤
         if (cost > 0 && cost > userBudget * 1.5) return;
 
         // ===============================================
-        // 🚦 3. 智能门槛 (非黑即白版)
+        // 🚦 3. 智能门槛 (看人下菜碟) - 核心修改
         // ===============================================
         
-        // 白名单：顶级分类 (世界遗产/国家级/动物园/植物园/博物馆/美术馆)
+        // 定义“顶级”分类 (含金量高的)
+        // 110201(世界遗产), 110202(国家级), 110102(动物园), 110103(植物园), 14xxxx(文化场馆)
         const isPremiumType = /^(110201|110202|110102|110103|14)/.test(typeCode);
         
-        // 黑名单逻辑：只要是 11 开头(风景)，但不是顶级，统统算普通！
-        // 这能防住 110206(景点), 110209(观景台) 等漏网之鱼
-        const isGenericType = typeCode.startsWith('11') && !isPremiumType;
+        // 定义“普通”分类 (容易水的)
+        // 110200(一般景点), 110100/110101(公园广场)
+        const isGenericType = /^(110200|110100|110101)/.test(typeCode);
 
-        // 📉 设定门槛
-        let minScore = 4.0; // 默认 (商场/娱乐)
+        // 📉 设定及格线
+        let minScore = 3.8; // 默认线
 
         if (isPremiumType) {
-            minScore = 4.0; // 顶级景点，3.5分放行
+            minScore = 3.5; // 顶级景点，3.5分就能进 (老牌景区设施旧点也没事)
         } else if (isGenericType) {
-            minScore = 4.0; // 普通景点(荷花池之流)，必须4.2分！
+            minScore = 4.2; // 普通公园，必须 4.2 分以上才配叫景点！(杀掉荷花池)
         }
 
-        // 拦截名字像"市政设施"的
+        // 🛑 名字敏感词拦截 (针对“广场”、“服务区”、“纪念碑”)
+        // 如果名字太像“市政设施”，门槛提到 4.5
         if (name.includes('广场') || name.includes('服务') || name.includes('中心') || name.includes('大厦')) {
-            if (!isPremiumType) minScore = 4.8; 
+            // 除非它是顶级类 (如"奥体中心"且代码是体育场馆)，否则杀
+            if (!isPremiumType) {
+                 minScore = 4.5; 
+            }
         }
         
+        // 执行评分淘汰
         if (rating < minScore) {
-             console.log(`[淘汰] ${name}: 评分不够硬 (需${minScore}, 实${rating})`);
+             console.log(`[淘汰] ${name}: 评分不够硬 (需要${minScore}，实际${rating})`);
              return; 
         }
 
         // ===============================================
-        // ⚖️ 4. 权重计算 (评分 > 距离)
+        // ⚖️ 4. 权重重构 (削弱距离，强调评分)
         // ===============================================
         let score = 0;
         
-        // 评分权重 (极高)
+        // A. 评分权重 (放大评分影响力)
+        // 4.0分 -> 40分, 5.0分 -> 50分。 差距 10分。
         const effectiveRating = rating || 4.0; 
-        score += effectiveRating * 15; // 权重加码
+        score += effectiveRating * 10; 
 
-        // 距离权重 (极低)
-        // 让20km的好店也能排前面
+        // B. 距离权重 (大幅削弱)
+        // 以前：1km=29分, 20km=10分 (差19分) -> 距离稍微远点就完蛋
+        // 现在：1km=14.5分, 20km=5分 (差9.5分) -> 只要分高，20km我也去！
         const distanceKm = (p.distance || 0) / 1000;
-        const distanceScore = Math.max(0, 10 - distanceKm * 0.3); // 距离影响很小
+        // 公式：满分15分，每公里扣0.5分
+        const distanceScore = Math.max(0, 15 - distanceKm * 0.5); 
         score += distanceScore;
 
+        // C. 图片权重
         if (p.photos && p.photos.length > 0) score += 5;
+
+        // D. 预算/免费权重
         if (cost === 0 || (cost > 0 && cost <= userBudget)) score += 10;
 
         p._score = score;
         validPois.push(p);
         
-        console.log(`[晋级] ${name}: ${score.toFixed(1)}分 (评分:${rating}, 距离:${distanceKm.toFixed(1)}km)`);
+        console.log(`[晋级] ${name}: ${score.toFixed(1)}分 (评分:${rating}, 距离:${distanceKm.toFixed(1)}km, 门槛:${minScore})`);
     });
 
     console.groupEnd();

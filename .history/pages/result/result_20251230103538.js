@@ -238,12 +238,12 @@ Page({
         const isGenericType = typeCode.startsWith('11') && !isPremiumType;
 
         // 📉 设定门槛
-        let minScore = 4.0; // 默认 (商场/娱乐)
+        let minScore = 4.5; // 默认 (商场/娱乐)
 
         if (isPremiumType) {
-            minScore = 4.0; // 顶级景点，3.5分放行
+            minScore = 4.5; // 顶级景点，3.5分放行
         } else if (isGenericType) {
-            minScore = 4.0; // 普通景点(荷花池之流)，必须4.2分！
+            minScore = 4.8; // 普通景点(荷花池之流)，必须4.2分！
         }
 
         // 拦截名字像"市政设施"的
